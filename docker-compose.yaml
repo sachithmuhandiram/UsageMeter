@@ -7,10 +7,12 @@ services:
       context: .
       dockerfile: Dockerfile
     network_mode: "host"
+    env_file: ./api.env
 
-  user-service:
-    image: user-service 
+  userservice:
+    image: userservice 
     build: 
       context: user-service/
       dockerfile: Dockerfile
     network_mode: "host"
+    env_file: ./api.env

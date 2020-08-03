@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Title of the document</title>
-    <style>
+<style>
       * {
         box-sizing: border-box;
       }
@@ -69,27 +67,46 @@
         opacity: 1;
       }
     </style>
-  </head>
-  <body>
-    
-    <div class="openBtn">
+<body>
+
+ <div class="openBtn">
       <button class="openButton" onclick="openForm()"><strong>Request Data</strong></button>
     </div>
     <div class="loginPopup">
       <div class="formPopup" id="popupForm">
-        <form action="usagemeter:7171/requestdata" class="formContainer">
+        <form  class="formContainer"  id="my_form" action="http://usagemeter:7171/requestdata">
           <h2>Please Request Data</h2>
           <label for="data_amount">
             <strong>Data Bundle</strong>
           </label>
           <input type="text" id="data_amount" name="data_amount" required>
       <p id="data_check"> </p>
-          <button type="submit" class="btn" onclick="Javascript:testInputData('data_amount',numbersOnly)">Request</button>
+          <button type="submit" class="btn">Request</button>
           <button type="button" class="btn cancel" onclick="closeForm()">Cancel</button>
         </form>
       </div>
     </div>
-    <script>
+
+
+</body>
+<script type="text/javascript">
+
+const my_form = document.getElementById('my_form')
+let msg = []
+my_form.addEventListener('submit',(e)=>{
+	
+	var myData = document.getElementById("data_amount").value;
+        if(isNaN(myData)){
+        	msg.push('Please enter integer value only')
+        }
+        
+        if(msg.length > 0){
+		e.preventDefault();
+	}
+	
+});
+</script>
+<script>
       function openForm() {
         console.log("Open form")
         document.getElementById("popupForm").style.display = "block";
@@ -98,27 +115,4 @@
         document.getElementById("popupForm").style.display = "none";
       }
     </script>
-
-    <script type="text/javascript">
- 
-       var numbersOnly = /^\d+$/;
-       
-       function testInputData(myfield, restrictionType) {
-       
-        var myData = document.getElementById(myfield).value;
-        if(myData!==''){
-         if(restrictionType.test(myData)){
-          alert('It is GOOD!');
-
-          // submit form
-         }else{
-          alert('Please insert integer values ONLY');
-          return;
-         }
-        }
-        return;
-           
-       }
-      </script>
-  </body>
 </html>

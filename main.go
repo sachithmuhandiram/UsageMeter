@@ -5,8 +5,10 @@ import (
 	"net/http"
 	"regexp"
 	"net"
+	"os"
 )
 
+var userservice = os.Getenv("USERSERVICE")
 func main() {
 
 	http.HandleFunc("/requestdata", requestData)
@@ -18,10 +20,14 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 	validUserInput,userIP := validateUserInput(req)
 
 	if validUserInput{
-		fmt.Fprintf(res, "Welcome to Home Page hahaha!")
+		//fmt.Fprintf(res, "Welcome to Home Page hahaha!")
 		fmt.Println("User IP address : ",userIP)
 
 		// send request to user service.
+
+		parameters := userservice+"/checkuser?userip="+ userIP
+
+		http.Redirect(res, req, parameters, http.StatusSeeOther)
 		// response success
 		// send success/failure to frontend 
 
