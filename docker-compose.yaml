@@ -7,3 +7,10 @@ services:
       context: .
       dockerfile: Dockerfile
     network_mode: "host"
+
+  user-service:
+    image: user-service 
+    build: 
+      context: user-service/
+      dockerfile: Dockerfile
+    network_mode: "host"

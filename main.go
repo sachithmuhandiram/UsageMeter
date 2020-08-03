@@ -21,6 +21,10 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(res, "Welcome to Home Page hahaha!")
 		fmt.Println("User IP address : ",userIP)
 
+		// send request to user service.
+		// response success
+		// send success/failure to frontend 
+
 	}else{
 		fmt.Fprintf(res, "Wrong input!")
 	}
