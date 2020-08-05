@@ -6,12 +6,31 @@ import (
 	"regexp"
 	"net"
 	"os"
+	"log"
+	// "encoding/csv"
+	"github.com/go-sql-driver/mysql"
+	"database/sql"
 )
 
 var userservice = os.Getenv("USERSERVICE")
+
+
+var gatewayDB	= os.Getenv("MYSQLDBGATEWAY")
+
+func dbConn() (db *sql.DB) {
+	db, err := sql.Open("mysql", gatewayDB)
+
+	if err != nil {
+		log.Println("Cant open database connection")
+	}
+	return db
+}
+
+
 func main() {
 
 	http.HandleFunc("/requestdata", requestData)
+	http.HandleFunc("/bulkuserinsert", bulkUserInsert)
 	http.ListenAndServe("0.0.0.0:7171", nil)
 }
 
@@ -53,4 +72,18 @@ func validateUserInput(req *http.Request)( bool,string){
 	}else{
 		return false,""
 	}
+}
+
+func bulkUserInsert(res http.ResponseWriter,req *http.Request){
+
+	bulkDataFile := req.FormValue("bulk_data")
+
+	db := dbConn()
+	mysql.RegisterLocalFile(bulkDataFile)
+	_,err := db.Exec("LOAD DATA LOCAL INFILE '"+bulkDataFile+"' INTO TABLE users FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n'")
+        if err != nil {
+            log.Println(err.Error())
+        }
+	log.Println("User Bulk data inserted")
+	defer db.Close()
 }

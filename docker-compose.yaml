@@ -16,3 +16,11 @@ services:
       dockerfile: Dockerfile
     network_mode: "host"
     env_file: ./api.env
+
+  adminservice:
+    image: adminmodule 
+    build: 
+      context: admin-module/
+      dockerfile: Dockerfile
+    network_mode: "host"
+    env_file: ./api.env
