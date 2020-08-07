@@ -4,6 +4,7 @@ import (
 
 	"net/http"
 	"log"
+	"fmt"
 
 )
 
@@ -18,7 +19,7 @@ func validUser(res http.ResponseWriter,req *http.Request){
 	userIP := req.FormValue("userip")
 	log.Println("IP address : ",userIP)
 
-
+	fmt.Fprintf(res,"huta") 
 
 }
 

@@ -49,9 +49,9 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Println("Error from user service")
 	}
-		// response success
-		// send success/failure to frontend 
-	log.Println("Response from User service",validUserRes)
+		validUserRes.Body.Close()
+		log.Println("Status : ", validUserRes.Body)
+	
 
 	}else{
 		fmt.Fprintf(res, "Wrong input!")
