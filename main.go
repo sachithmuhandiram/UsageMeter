@@ -7,7 +7,7 @@ import (
 	"net"
 	"os"
 	"log"
-	// "encoding/csv"
+	"net/url"
 	"github.com/go-sql-driver/mysql"
 	"database/sql"
 )
@@ -38,21 +38,25 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 
 	validUserInput,userIP := validateUserInput(req)
 
-	if validUserInput{
-		//fmt.Fprintf(res, "Welcome to Home Page hahaha!")
-		fmt.Println("User IP address : ",userIP)
+	/*
+		This could be a problem as only one user connection active per time. Neet to test and verify.
+	*/
+	if (validUserInput){
+		validUser := userservice +"/validuser"
 
-		// send request to user service.
+    	validUserRes, err := http.PostForm(validUser, url.Values{"userip": {userIP}})
 
-		parameters := userservice+"/checkuser?userip="+ userIP
-
-		http.Redirect(res, req, parameters, http.StatusSeeOther)
+	if err != nil {
+		log.Println("Error from user service")
+	}
 		// response success
 		// send success/failure to frontend 
+	log.Println("Response from User service",validUserRes)
 
 	}else{
 		fmt.Fprintf(res, "Wrong input!")
 	}
+	
 
 }
 

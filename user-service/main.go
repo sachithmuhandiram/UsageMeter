@@ -8,14 +8,19 @@ import (
 )
 
 func main() {
-	http.HandleFunc("/checkuser", checkUser)
+	http.HandleFunc("/validuser", validUser)
 	http.ListenAndServe(":7272", nil)
 }
 
-func checkUser(res http.ResponseWriter,req *http.Request){
+// This returns true/false to main service
+func validUser(res http.ResponseWriter,req *http.Request){
 
 	userIP := req.FormValue("userip")
 	log.Println("IP address : ",userIP)
+
+
+
+}
 
 	// get user name /email
 
@@ -26,5 +31,3 @@ func checkUser(res http.ResponseWriter,req *http.Request){
 	// send emails to managers/admins
 
 	// send response back to frontened
-
-}
