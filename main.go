@@ -10,11 +10,19 @@ import (
 	"net/url"
 	"github.com/go-sql-driver/mysql"
 	"database/sql"
+	"strconv"
+	"io/ioutil"
 )
 
+type userObject struct{
+	userChain string `json: "userchain"`
+	userEmail string `json: "useremail"`
+	defaultQuota int `json: "defaultquota"`
+
+}
+
+
 var userservice = os.Getenv("USERSERVICE")
-
-
 var gatewayDB	= os.Getenv("MYSQLDBGATEWAY")
 
 func dbConn() (db *sql.DB) {
@@ -42,15 +50,19 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 		This could be a problem as only one user connection active per time. Neet to test and verify.
 	*/
 	if (validUserInput){
-		validUser := userservice +"/validuser"
 
-    	validUserRes, err := http.PostForm(validUser, url.Values{"userip": {userIP}})
+		validIP := checkIP(userIP)
+	
+		if (validIP){
 
-	if err != nil {
-		log.Println("Error from user service")
-	}
-		validUserRes.Body.Close()
-		log.Println("Status : ", validUserRes.Body)
+			userDetails := getUserDetails(userIP) // returns JSON object
+			log.Println("User details : ",userDetails)
+
+		}else{
+			log.Println("Wrong IP address. No user for this IP address")
+		}
+		
+	
 	
 
 	}else{
@@ -90,4 +102,42 @@ func bulkUserInsert(res http.ResponseWriter,req *http.Request){
         }
 	log.Println("User Bulk data inserted")
 	defer db.Close()
+}
+
+func checkIP(userIP string) bool{
+
+	validUser := userservice +"/validuser"
+	validUserRes, err := http.PostForm(validUser, url.Values{"userip": {userIP}})
+
+	defer validUserRes.Body.Close()
+
+	respBytes, err := ioutil.ReadAll(validUserRes.Body)
+	if err != nil {
+		log.Println("Couldn't read body")
+	}
+
+	respBool, err := strconv.ParseBool(string(respBytes))
+	if err != nil {
+		log.Println("Couldn't parse bool from body")
+	}
+
+	return respBool
+}
+
+func getUserDetails(userIP string) []byte{
+	getUserDetails := userservice +"/userdetails"
+
+	userDetailsRes, err := http.PostForm(getUserDetails, url.Values{"userip": {userIP}})
+
+	respBytes, err := ioutil.ReadAll(userDetailsRes.Body)
+	if err != nil {
+		log.Println("Couldn't read body")
+	}
+
+	//respBool, err := strconv.ParseBool(string(respBytes))
+	if err != nil {
+		log.Println("Couldn't parse bool from body")
+	}
+	defer userDetailsRes.Body.Close()
+	return respBytes
 }
