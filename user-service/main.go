@@ -11,9 +11,9 @@ import (
 
 
 type userObject struct{
-	userChain string
-	userEmail string
-	defaultQuota int
+	UserChain string
+	UserEmail string
+	DefaultQuota int
 
 }
 
@@ -39,9 +39,9 @@ func userDetails(res http.ResponseWriter,req *http.Request){
 	log.Println("User IP address : ",userIP)
 
 	userDetail := userObject{
-		userChain : "sachithchain",
-		userEmail : "sachith@vx.com",
-		defaultQuota : 7000	}
+		UserChain : "sachithchain",
+		UserEmail : "sachith@vx.com",
+		DefaultQuota : 7000	}
 
 		log.Println("User details from  user service",userDetail)
 		res.Header().Set("Content-Type", "application/json")

@@ -16,9 +16,9 @@ import (
 )
 
 type userObject struct{
-	userChain string `json: "userchain"`
-	userEmail string `json: "useremail"`
-	defaultQuota int `json: "defaultquota"`
+	UserChain string `json: "userchain"`
+	UserEmail string `json: "useremail"`
+	DefaultQuota int `json: "defaultquota"`
 
 }
 
@@ -130,8 +130,6 @@ func getUserDetails(userIP string) userObject{
 
 	userDetailsRes, err := http.PostForm(getUserDetails, url.Values{"userip": {userIP}})
 
-	log.Println("User details response from user details :",userDetailsRes)
-
 	userDetaildecoder := json.NewDecoder(userDetailsRes.Body)
     var userDetail userObject
     err = userDetaildecoder.Decode(&userDetail)
@@ -139,6 +137,8 @@ func getUserDetails(userIP string) userObject{
 		log.Println("Could not decode user details")
 	}
 
-	log.Println("User details from main : ",userDetail)
+	log.Println("User details from main : ",userDetail.UserEmail) // fix here to show user email
+
+	defer userDetailsRes.Body.Close()
 	return userDetail
 }
