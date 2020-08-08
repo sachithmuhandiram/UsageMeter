@@ -43,6 +43,7 @@ func userDetails(res http.ResponseWriter,req *http.Request){
 		userEmail : "sachith@vx.com",
 		defaultQuota : 7000	}
 
+		log.Println("User details from  user service",userDetail)
 		res.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(res).Encode(userDetail) 
 }

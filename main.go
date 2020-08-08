@@ -12,6 +12,7 @@ import (
 	"database/sql"
 	"strconv"
 	"io/ioutil"
+	"encoding/json"
 )
 
 type userObject struct{
@@ -124,20 +125,20 @@ func checkIP(userIP string) bool{
 	return respBool
 }
 
-func getUserDetails(userIP string) []byte{
+func getUserDetails(userIP string) userObject{
 	getUserDetails := userservice +"/userdetails"
 
 	userDetailsRes, err := http.PostForm(getUserDetails, url.Values{"userip": {userIP}})
 
-	respBytes, err := ioutil.ReadAll(userDetailsRes.Body)
-	if err != nil {
-		log.Println("Couldn't read body")
+	log.Println("User details response from user details :",userDetailsRes)
+
+	userDetaildecoder := json.NewDecoder(userDetailsRes.Body)
+    var userDetail userObject
+    err = userDetaildecoder.Decode(&userDetail)
+    if err != nil {
+		log.Println("Could not decode user details")
 	}
 
-	//respBool, err := strconv.ParseBool(string(respBytes))
-	if err != nil {
-		log.Println("Couldn't parse bool from body")
-	}
-	defer userDetailsRes.Body.Close()
-	return respBytes
+	log.Println("User details from main : ",userDetail)
+	return userDetail
 }
