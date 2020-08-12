@@ -96,7 +96,7 @@ let msg = []
 my_form.addEventListener('submit',(e)=>{
 	
 	var myData = document.getElementById("data_amount").value;
-        if(isNaN(myData)){
+        if(isNaN(myData) || (myData ==0)){
         	msg.push('Please enter integer value only')
         }
         

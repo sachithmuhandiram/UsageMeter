@@ -108,13 +108,10 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 				return
 			}
 			log.Printf("Data quota request for %s email sent to managers",userDetails.UserChain)
-			
+			fmt.Fprintf(res, "Data requested sucessfully")
 		}else{
 			log.Println("Wrong IP address. No user for this IP address  : ",userIP)
 		}
-		
-	
-	
 
 	}else{
 		fmt.Fprintf(res, "Wrong input!")

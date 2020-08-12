@@ -31,26 +31,24 @@ func sendQuotaRequestEmail(res http.ResponseWriter, req *http.Request) {
 	user := req.FormValue("user")
 	requestedQuota := req.FormValue("requestedQuota")
 	managers := req.FormValue("managers")
-	//admins := req.FormValue("admins")
+	admins := req.FormValue("admins")
 
-	toManagers := strings.Split(managers, ",") 
+	receivers := managers+","+admins
+	toReceivers := strings.Split(receivers,",")
 	msg := "Additional " + requestedQuota + "GB data quota is requested by "+ user +"."
-	log.Println("From notificateion service : ",managers)
-	log.Println("To managers : ",toManagers)
-
-	
 
 	body := msg
 	from, pass := getCredintials()
 
 	emailMsg := "From: " + from + "\n" +
 	"To: " + managers + "\n" +
+	"Cc: " + admins +"\n" +
 	"Subject: Request : additional dataquota \n\n" +
 	body
 
 	err := smtp.SendMail("smtp.gmail.com:587",
 	smtp.PlainAuth("", from, pass, "smtp.gmail.com"),
-	from, toManagers, []byte(emailMsg))
+	from, toReceivers, []byte(emailMsg))
 
 	if err != nil{
 		fmt.Fprintf(res,"false") 

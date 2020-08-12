@@ -56,14 +56,14 @@ func getManagerEmails(res http.ResponseWriter,req *http.Request){
 	userChain := req.FormValue("userchain")
 	log.Println("User chain",userChain)
 //DB call to get manager emails
-	managerEmails := []string{"sachith@vizuamatix.com","msachithnalaka@yahoo.com"}
+	managerEmails := []string{"sachith@vizuamatix.com","sachithnalaka@gmail.com"}
 	res.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(res).Encode(managerEmails) 
 	
 }
 
 func getAdminEmails(res http.ResponseWriter,req *http.Request){
-	adminEmails := []string{"sachith@vx.com","janith@vx.com"}
+	adminEmails := []string{"msachithnalaka@yahoo.com","janith@vx.com"}
 	res.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(res).Encode(adminEmails) 
 }
