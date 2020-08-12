@@ -3,11 +3,13 @@ package main
 import(
 	"net/http"
 	"os"
-	//"net/smtp"
+	"net/smtp"
 	"log"
 	"fmt"
 	"encoding/json"
 	"io/ioutil"
+	"strings"
+
 )
 
 type emailDetails struct {
@@ -23,30 +25,38 @@ func main(){
 
 func sendQuotaRequestEmail(res http.ResponseWriter, req *http.Request) {
 
-	//get user
+	//get user convert to first name
 	// get managers
 	//get admins
 	user := req.FormValue("user")
 	requestedQuota := req.FormValue("requestedQuota")
 	managers := req.FormValue("managers")
-	admins := req.FormValue("admins")
+	//admins := req.FormValue("admins")
 
-	log.Println("From notificateion service : ",user,requestedQuota,managers,admins)
+	toManagers := strings.Split(managers, ",") 
+	msg := "Additional " + requestedQuota + "GB data quota is requested by "+ user +"."
+	log.Println("From notificateion service : ",managers)
+	log.Println("To managers : ",toManagers)
 
+	
+
+	body := msg
+	from, pass := getCredintials()
+
+	emailMsg := "From: " + from + "\n" +
+	"To: " + managers + "\n" +
+	"Subject: Request : additional dataquota \n\n" +
+	body
+
+	err := smtp.SendMail("smtp.gmail.com:587",
+	smtp.PlainAuth("", from, pass, "smtp.gmail.com"),
+	from, toManagers, []byte(emailMsg))
+
+	if err != nil{
+		fmt.Fprintf(res,"false") 
+		log.Println("Error : ",err)
+	}
 	fmt.Fprintf(res,"true") 
-
-	// body := msg + "\n" +  + "=" +  user.token + "\n This link valid only for 30 minutes"
-	// from, pass := getCredintials()
-
-	// emailMsg := "From: " + from + "\n" +
-	// 	"To: " + user.email + "\n" +
-	// 	"Subject: Register to the system\n\n" +
-	// 	body
-
-	// err := smtp.SendMail("smtp.gmail.com:587",
-	// 	smtp.PlainAuth("", from, pass, "smtp.gmail.com"),
-	// 	from, []string{user.email}, []byte(emailMsg))
-
 }
 
 func getCredintials() (string, string) {

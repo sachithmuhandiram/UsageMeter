@@ -56,7 +56,7 @@ func getManagerEmails(res http.ResponseWriter,req *http.Request){
 	userChain := req.FormValue("userchain")
 	log.Println("User chain",userChain)
 //DB call to get manager emails
-	managerEmails := []string{"tharindu@vx.com","pamu@vx.com"}
+	managerEmails := []string{"sachith@vizuamatix.com","msachithnalaka@yahoo.com"}
 	res.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(res).Encode(managerEmails) 
 	

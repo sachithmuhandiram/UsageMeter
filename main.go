@@ -89,7 +89,6 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 				log.Println("There is a problem with getting managers emails for User : ",userDetails.UserChain)
 				return
 			}
-			log.Println("Manager emails : ",managerEmails)
 			// got manager emails
 
 			adminEmails,err := getAdminEmails()
@@ -129,18 +128,19 @@ func dataQuotaRequest(user string ,quotaReq string  ,managers string ,admins str
 	// send email to admins and managers
 	sendQuotaRequest := notificationservice +"/sendquotarequestmail"
 
-	userDetailsRes, err := http.PostForm(sendQuotaRequest, url.Values{"user": {user},"requestedQuota":{quotaReq},"managers": {managers},"admins": {admins}})
-	defer userDetailsRes.Body.Close()
+	quotaRequestRes, err := http.PostForm(sendQuotaRequest, url.Values{"user": {user},"requestedQuota":{quotaReq},"managers": {managers},"admins": {admins}})
+	defer quotaRequestRes.Body.Close()
 
-	respBytes, err := ioutil.ReadAll(userDetailsRes.Body)
+	respBytes, err := ioutil.ReadAll(quotaRequestRes.Body)
 	if err != nil {
-		log.Println("Couldn't read userDetailsRes body")
+		log.Println("Couldn't read quotaRequestRes body")
 		return false
 	}
 
+	log.Println("quotaRequestRes",quotaRequestRes)
 	respBool, err := strconv.ParseBool(string(respBytes))
 	if err != nil {
-		log.Println("Couldn't parse bool from userDetailsRes body")
+		log.Println("Couldn't parse bool from userDetquotaRequestResailsRes body")
 		return false
 	}
 
