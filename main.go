@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"io/ioutil"
 	"encoding/json"
+	"strings"
 	//"reflect"
 )
 
@@ -27,6 +28,7 @@ type userObject struct{
 
 var userservice = os.Getenv("USERSERVICE")
 var gatewayDB	= os.Getenv("MYSQLDBGATEWAY")
+var notificationservice = os.Getenv("NOTIFICATIONSERVICE")
 
 func dbConn() (db *sql.DB) {
 	db, err := sql.Open("mysql", gatewayDB)
@@ -96,15 +98,20 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 				log.Println("There is a problem getting admin emails")
 				return
 			}
-			log.Println("Admin emails : ",adminEmails)
+
 			requestedDataQuota := req.FormValue("data_amount")
+			managers := strings.Join(managerEmails, ",")
+			admins := strings.Join(adminEmails, ",")
+			sentQuotaReq := dataQuotaRequest(userDetails.UserChain,requestedDataQuota,managers,admins)
 
-			log.Println("User requested data quota : ",requestedDataQuota)
-
-			// send email to admins and managers
+			if (sentQuotaReq != true){
+				log.Printf("There was a problem sending quota request email for user : ",userDetails.UserChain)
+				return
+			}
+			log.Printf("Data quota request for %s email sent to managers",userDetails.UserChain)
 			
 		}else{
-			log.Println("Wrong IP address. No user for this IP address")
+			log.Println("Wrong IP address. No user for this IP address  : ",userIP)
 		}
 		
 	
@@ -116,6 +123,32 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 	
 
 }
+
+func dataQuotaRequest(user string ,quotaReq string  ,managers string ,admins string ) bool{
+
+	// send email to admins and managers
+	sendQuotaRequest := notificationservice +"/sendquotarequestmail"
+
+	userDetailsRes, err := http.PostForm(sendQuotaRequest, url.Values{"user": {user},"requestedQuota":{quotaReq},"managers": {managers},"admins": {admins}})
+	defer userDetailsRes.Body.Close()
+
+	respBytes, err := ioutil.ReadAll(userDetailsRes.Body)
+	if err != nil {
+		log.Println("Couldn't read userDetailsRes body")
+		return false
+	}
+
+	respBool, err := strconv.ParseBool(string(respBytes))
+	if err != nil {
+		log.Println("Couldn't parse bool from userDetailsRes body")
+		return false
+	}
+
+	return respBool
+
+
+}
+
 
 func validateUserInput(req *http.Request)( bool,string){
 
