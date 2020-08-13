@@ -40,6 +40,8 @@ func userDetails(res http.ResponseWriter,req *http.Request){
 	userIP := req.FormValue("userip")
 	log.Println("User IP address : ",userIP)
 
+	// get user details for the IP
+	
 	userDetail := userObject{
 		UserChain : "sachithchain",
 		UserEmail : "sachith@vx.com",
