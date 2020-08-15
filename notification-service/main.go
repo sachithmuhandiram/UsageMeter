@@ -1,60 +1,48 @@
 package main
 
-import(
-	"net/http"
-	"os"
-	"net/smtp"
-	"log"
-	"fmt"
+import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"log"
+	"net/http"
+	"net/smtp"
+	"os"
 	"strings"
-
 )
 
 type emailDetails struct {
-	From    string `json:"from"`
-	Parse   string `json:"parse"`
+	From  string `json:"from"`
+	Parse string `json:"parse"`
 }
 
-func main(){
+func main() {
 
-	http.HandleFunc("/sendquotarequestmail",sendQuotaRequestEmail)
+	http.HandleFunc("/sendquotarequestmail", sendQuotaRequestEmail)
 	http.ListenAndServe("0.0.0.0:7474", nil)
 }
 
 func sendQuotaRequestEmail(res http.ResponseWriter, req *http.Request) {
+	sendEmailChan := make(chan bool)
 
+	go sendRequestEmail(req, sendEmailChan)
+
+	sentEmail := <-sendEmailChan
+
+	log.Print("sent email boolean channel value : ", sentEmail)
+	if sentEmail {
+		fmt.Fprintf(res, "true")
+		close(sendEmailChan)
+		return
+	}
+
+	fmt.Fprintf(res, "false")
+	close(sendEmailChan)
+	return
 	//get user convert to first name
 	// get managers
 	//get admins
-	user := req.FormValue("user")
-	requestedQuota := req.FormValue("requestedQuota")
-	managers := req.FormValue("managers")
-	admins := req.FormValue("admins")
 
-	receivers := managers+","+admins
-	toReceivers := strings.Split(receivers,",")
-	msg := "Additional " + requestedQuota + "GB data quota is requested by "+ user +"."
-
-	body := msg
-	from, pass := getCredintials()
-
-	emailMsg := "From: " + from + "\n" +
-	"To: " + managers + "\n" +
-	"Cc: " + admins +"\n" +
-	"Subject: Request : additional dataquota \n\n" +
-	body
-
-	err := smtp.SendMail("smtp.gmail.com:587",
-	smtp.PlainAuth("", from, pass, "smtp.gmail.com"),
-	from, toReceivers, []byte(emailMsg))
-
-	if err != nil{
-		fmt.Fprintf(res,"false") 
-		log.Println("Error : ",err)
-	}
-	fmt.Fprintf(res,"true") 
 }
 
 func getCredintials() (string, string) {
@@ -73,4 +61,36 @@ func getCredintials() (string, string) {
 
 	return email.From, email.Parse
 
+}
+
+func sendRequestEmail(req *http.Request, ch chan bool) <-chan bool {
+	user := req.FormValue("user")
+	requestedQuota := req.FormValue("requestedQuota")
+	managers := req.FormValue("managers")
+	admins := req.FormValue("admins")
+
+	receivers := managers + "," + admins
+	toReceivers := strings.Split(receivers, ",")
+	msg := "Additional " + requestedQuota + "GB data quota is requested by " + user + "."
+
+	body := msg
+	from, pass := getCredintials()
+
+	emailMsg := "From: " + from + "\n" +
+		"To: " + managers + "\n" +
+		"Cc: " + admins + "\n" +
+		"Subject: Request : additional dataquota \n\n" +
+		body
+
+	err := smtp.SendMail("smtp.gmail.com:587",
+		smtp.PlainAuth("", from, pass, "smtp.gmail.com"),
+		from, toReceivers, []byte(emailMsg))
+
+	if err != nil {
+		log.Println("Error : ", err)
+		ch <- false
+		return ch
+	}
+	ch <- true
+	return ch
 }
