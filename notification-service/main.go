@@ -9,6 +9,7 @@ import (
 	"net/smtp"
 	"os"
 	"strings"
+	"time"
 )
 
 type emailDetails struct {
@@ -18,8 +19,31 @@ type emailDetails struct {
 
 func main() {
 
-	http.HandleFunc("/sendquotarequestmail", sendQuotaRequestEmail)
+	http.HandleFunc("/sendquotarequestmail", routeSample) //sendQuotaRequestEmail
 	http.ListenAndServe("0.0.0.0:7474", nil)
+}
+
+func routeSample(res http.ResponseWriter, req *http.Request) {
+
+	boolChan := make(chan bool)
+
+	go blockingFunc(boolChan)
+
+	if <-boolChan {
+		fmt.Fprintf(res, "true")
+		return
+	}
+
+	fmt.Fprintf(res, "false")
+	return
+}
+
+func blockingFunc(ch chan bool) <-chan bool {
+	time.Sleep(5000 * time.Millisecond)
+
+	ch <- true
+
+	return ch
 }
 
 func sendQuotaRequestEmail(res http.ResponseWriter, req *http.Request) {
