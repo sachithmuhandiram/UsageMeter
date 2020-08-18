@@ -29,6 +29,7 @@ type userObject struct{
 var userservice = os.Getenv("USERSERVICE")
 var gatewayDB	= os.Getenv("MYSQLDBGATEWAY")
 var notificationservice = os.Getenv("NOTIFICATIONSERVICE")
+var adminservice = os.Getenv("ADMINSERVICE")
 
 func dbConn() (db *sql.DB) {
 	db, err := sql.Open("mysql", gatewayDB)
@@ -44,6 +45,7 @@ func main() {
 
 	http.HandleFunc("/requestdata", requestData)
 	http.HandleFunc("/bulkuserinsert", bulkUserInsert)
+	http.HandleFunc("/addmanagerstouser",addManagersToUser)
 	http.ListenAndServe("0.0.0.0:7171", nil)
 }
 
@@ -146,6 +148,37 @@ func dataQuotaRequest(user string ,quotaReq string  ,managers string ,admins str
 
 }
 
+func addManagersToUser(res http.ResponseWriter,req *http.Request){
+
+	adduserManagersReq := adminservice+"/addmanagerstouser"
+	
+	usagerManagersCsv := req.FormValue("user_managers")
+
+	//log.Println("User Managers ",usagerManagers)
+
+	adduserManagersRes, err := http.PostForm(adduserManagersReq, url.Values{"usermanagers": {usagerManagersCsv}})
+	defer adduserManagersRes.Body.Close()
+
+	respBytes, err := ioutil.ReadAll(adduserManagersRes.Body)
+	if err != nil {
+		log.Println("Couldn't read adduserManagersRes body")
+		fmt.Fprintf(res, "Couldnt add Managers to Users")
+	}
+
+	respBool, err := strconv.ParseBool(string(respBytes))
+	if err != nil {
+		log.Println("Couldn't parse bool from adduserManagersRes body")
+		fmt.Fprintf(res, "Couldnt add Managers to Users")
+	}
+
+	if respBool{
+	fmt.Fprintf(res, "Managers were added to users")
+	return
+	}
+
+	fmt.Fprintf(res, "Couldnt add Managers to Users")
+
+}
 
 func validateUserInput(req *http.Request)( bool,string){
 
