@@ -80,6 +80,7 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 					return
 				}
 			}
+			// check user has pending request
 
 			// user details are ok, take manager emails
 			managerEmails, err := getManagerEmails(userDetails.UserChain)
