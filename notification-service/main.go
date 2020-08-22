@@ -87,6 +87,7 @@ func getCredintials() (string, string) {
 
 }
 
+// This is used to create as a separate go route.
 func sendRequestEmail(req *http.Request, ch chan bool) <-chan bool {
 	user := req.FormValue("user")
 	requestedQuota := req.FormValue("requestedQuota")
