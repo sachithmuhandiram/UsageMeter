@@ -43,6 +43,7 @@ func main() {
 	http.HandleFunc("/requestdata", requestData)
 	http.HandleFunc("/bulkuserinsert", bulkUserInsert)
 	http.HandleFunc("/insertmanagerstouser", insertManagersToUser)
+	http.HandleFunc("/insertuserdevices", insertUserDevices)
 	http.ListenAndServe("0.0.0.0:7171", nil)
 }
 
@@ -69,16 +70,21 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 
 			if userDetails.IsManager {
 
+				if userDetails.DefaultQuota == 0 {
+					fmt.Fprintf(res, "You have no data quota restrictions")
+					return
+				}
+
 				addedDataQuotatoManager := addQuotaToManager(userDetails.UserChain)
 
 				if addedDataQuotatoManager {
 					log.Println("Added data quota to Manager : ", userDetails.UserChain)
 					// send an email to manager yet to develop
 					return
-				} else {
-					log.Println("There is a problem adding data quota to manager : ", userDetails.UserChain)
-					return
 				}
+				log.Println("There is a problem adding data quota to manager : ", userDetails.UserChain)
+				return
+
 			}
 			// check user has pending request pendingRequest table
 			hasPendingReq := checkPendingRequest(userDetails.UserChain)
@@ -196,6 +202,19 @@ func insertManagersToUser(res http.ResponseWriter, req *http.Request) {
 		log.Println(err.Error())
 	}
 	log.Println("User Managers data inserted")
+	defer db.Close()
+}
+
+func insertUserDevices(res http.ResponseWriter, req *http.Request) {
+	bulkDataFile := req.FormValue("user_devices")
+
+	db := dbConn()
+	mysql.RegisterLocalFile(bulkDataFile)
+	_, err := db.Exec("LOAD DATA LOCAL INFILE '" + bulkDataFile + "' INTO TABLE userDevices FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' (userChain,deviceIP) SET isActive=1;")
+	if err != nil {
+		log.Println(err.Error())
+	}
+	log.Println("User Device data inserted")
 	defer db.Close()
 }
 
@@ -334,5 +353,6 @@ func insertToPendingRequest(user string) {
 		log.Println("There is a problem inserting to pendingRequest table")
 	}
 	insData.Exec(user, 1)
+	log.Println("Inserted record to pendingRequest table for user : ", user)
 	defer db.Close()
 }

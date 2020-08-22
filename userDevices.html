@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<style>
+      * {
+        box-sizing: border-box;
+      }
+      .openBtn {
+        display: flex;
+        justify-content: left;
+      }
+      .openButton {
+        border: none;
+        border-radius: 5px;
+        background-color: #1c87c9;
+        color: white;
+        padding: 14px 20px;
+        cursor: pointer;
+        position: fixed;
+      }
+      .loginPopup {
+        position: relative;
+        text-align: center;
+        width: 100%;
+      }
+      .formPopup {
+        display: none;
+        position: fixed;
+        left: 45%;
+        top: 5%;
+        transform: translate(-50%, 5%);
+        border: 3px solid #999999;
+        z-index: 9;
+      }
+      .formContainer {
+        max-width: 300px;
+        padding: 20px;
+        background-color: #fff;
+      }
+      .formContainer input[type=text],
+      .formContainer input[type=password] {
+        width: 100%;
+        padding: 15px;
+        margin: 5px 0 20px 0;
+        border: none;
+        background: #eee;
+      }
+      .formContainer input[type=text]:focus,
+      .formContainer input[type=password]:focus {
+        background-color: #ddd;
+        outline: none;
+      }
+      .formContainer .btn {
+        padding: 12px 20px;
+        border: none;
+        background-color: #8ebf42;
+        color: #fff;
+        cursor: pointer;
+        width: 100%;
+        margin-bottom: 15px;
+        opacity: 0.8;
+      }
+      .formContainer .cancel {
+        background-color: #cc0000;
+      }
+      .formContainer .btn:hover,
+      .openButton:hover {
+        opacity: 1;
+      }
+    </style>
+<body>
+
+ <div class="openBtn">
+      <button class="openButton" onclick="openBulkForm()"><strong>Bulk User Insert</strong></button>
+      
+    </div>
+    <div class="loginPopup">
+      <div class="formPopup" id="popupBulkUserForm">
+        <form  class="formContainer"  id="my_form" action="http://usagemeter:7171/insertuserdevices">
+          <h2>Please User's Manager CSV</h2>
+          <label for="user_devices">
+            <strong>Upload CSV</strong>
+          </label>
+          <input id="upload" type="file" name="user_devices">
+      <p id="data_check"> </p>
+          <button type="submit" class="btn">Upload</button>
+          <button type="button" class="btn cancel" onclick="closeBulkForm()">Cancel</button>
+        </form>
+      </div>
+    </div>
+<br><br><br>
+    <!-- Single user insert-->
+    <!-- <div class="openBtn">
+    <button class="openButton" onclick="openUserForm()"><strong>Add a User</strong></button>
+  </div> -->
+  <!-- <div class="loginPopup">
+    <div class="formPopup" id="popupUserForm">
+      <form  class="formContainer"  id="my_form" action="http://usagemeter:7171/requestdata">
+        <h2>Please Insert a User</h2>
+        <label for="data_amount">
+          <strong>Data Bundle</strong>
+        </label>
+        <input type="text" id="data_amount" name="data_amount" required>
+    <p id="data_check"> </p>
+        <button type="submit" class="btn">Request</button>
+        <button type="button" class="btn cancel" onclick="closeUserForm()">Cancel</button>
+      </form>
+    </div>
+  </div> -->
+
+
+</body>
+<script type="text/javascript">
+
+const my_form = document.getElementById('my_form')
+let msg = []
+my_form.addEventListener('submit',(e)=>{
+	
+	var myData = document.getElementById("data_amount").value;
+        if(isNaN(myData)){
+        	msg.push('Please enter integer value only')
+        }
+        
+        if(msg.length > 0){
+		e.preventDefault();
+	}
+	
+});
+</script>
+<script>
+      function openBulkForm() {
+        console.log("Open form")
+        document.getElementById("popupBulkUserForm").style.display = "block";
+      }
+
+      function openUserForm() {
+        console.log("Open form")
+        document.getElementById("popupUserForm").style.display = "block";
+      }
+
+      function closeBulkForm() {
+        document.getElementById("popupBulkUserForm").style.display = "none";
+      }
+
+      function closeUserForm() {
+        document.getElementById("popupUserForm").style.display = "none";
+      }
+    </script>
+</html>
