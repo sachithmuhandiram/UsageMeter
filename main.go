@@ -115,7 +115,7 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 			sentQuotaReq := dataQuotaRequest(userDetails.UserChain, requestedDataQuota, managers, admins)
 
 			if sentQuotaReq != true {
-				log.Printf("There was a problem sending quota request email for user : ", userDetails.UserChain)
+				log.Println("There was a problem sending quota request email for user : ", userDetails.UserChain)
 				return
 			}
 			log.Printf("Data quota request for %s email sent to managers", userDetails.UserChain)
@@ -140,7 +140,12 @@ func dataQuotaRequest(user string, quotaReq string, managers string, admins stri
 	sendQuotaRequest := notificationservice + "/sendquotarequestmail"
 
 	quotaRequestRes, err := http.PostForm(sendQuotaRequest, url.Values{"user": {user}, "requestedQuota": {quotaReq}, "managers": {managers}, "admins": {admins}})
-	defer quotaRequestRes.Body.Close()
+
+	if err != nil {
+		log.Println("Couldnt post data quota request")
+		defer quotaRequestRes.Body.Close()
+		return false
+	}
 
 	respBytes, err := ioutil.ReadAll(quotaRequestRes.Body)
 	if err != nil {
@@ -154,7 +159,7 @@ func dataQuotaRequest(user string, quotaReq string, managers string, admins stri
 		log.Println("Couldn't parse bool from userDetquotaRequestResailsRes body")
 		return false
 	}
-
+	defer quotaRequestRes.Body.Close()
 	return respBool
 
 }
@@ -223,8 +228,6 @@ func checkIP(userIP string) bool {
 	validUser := userservice + "/validuser"
 	validUserRes, err := http.PostForm(validUser, url.Values{"userip": {userIP}})
 
-	defer validUserRes.Body.Close()
-
 	respBytes, err := ioutil.ReadAll(validUserRes.Body)
 	if err != nil {
 		log.Println("Couldn't read body")
@@ -234,6 +237,7 @@ func checkIP(userIP string) bool {
 	if err != nil {
 		log.Println("Couldn't parse bool from body")
 	}
+	defer validUserRes.Body.Close()
 
 	return respBool
 }
