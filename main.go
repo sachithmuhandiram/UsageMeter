@@ -80,8 +80,13 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 					return
 				}
 			}
-			// check user has pending request
+			// check user has pending request pendingRequest table
+			hasPendingReq := checkPendingRequest(userDetails.UserChain)
 
+			if hasPendingReq {
+				fmt.Fprintf(res, "You have a pending data quota request")
+				return
+			}
 			// user details are ok, take manager emails
 			managerEmails, err := getManagerEmails(userDetails.UserChain)
 
@@ -108,7 +113,11 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 				return
 			}
 			log.Printf("Data quota request for %s email sent to managers", userDetails.UserChain)
+
 			fmt.Fprintf(res, "Data requested sucessfully")
+
+			//insert record to pendingRequest table | userchain | 1
+			insertToPendingRequest(userDetails.UserChain)
 		} else {
 			log.Println("Wrong IP address. No user for this IP address  : ", userIP)
 		}
@@ -300,4 +309,30 @@ func getAdminEmails() ([]string, error) {
 
 	defer adminEmailsRes.Body.Close()
 	return adminEmail, nil
+}
+
+func checkPendingRequest(user string) bool {
+	db := dbConn()
+
+	var hasPendingReq bool
+	row := db.QueryRow("SELECT EXISTS(SELECT id FROM pendingRequest WHERE userChain=? AND isPending=1)", user)
+
+	err := row.Scan(&hasPendingReq)
+	if err != nil {
+		log.Println("Error checking pendingRequest")
+	}
+	log.Println("check pending request : ", hasPendingReq)
+	return hasPendingReq
+}
+
+func insertToPendingRequest(user string) {
+	// insert into pendingRequest table
+	db := dbConn()
+
+	insData, err := db.Prepare("INSERT INTO pendingRequest (userChain,isPending) VALUES(?,?)")
+	if err != nil {
+		log.Println("There is a problem inserting to pendingRequest table")
+	}
+	insData.Exec(user, 1)
+	defer db.Close()
 }
