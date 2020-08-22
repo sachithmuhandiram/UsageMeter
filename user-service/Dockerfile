@@ -4,6 +4,8 @@ RUN apk update
 
 RUN apk add git
 
+RUN go get github.com/go-sql-driver/mysql
+
 COPY . /go/src
 
 WORKDIR /go/src

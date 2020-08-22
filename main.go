@@ -14,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 
+	"errors"
+
 	"github.com/go-sql-driver/mysql"
 	//"reflect"
 )
@@ -261,6 +263,10 @@ func getUserDetails(userIP string) (userObject, error) {
 		return userDetail, err
 	}
 
+	if userDetail.UserChain == "" {
+		log.Println("Null data received from User service")
+		return userDetail, errors.New("Data not received from User service")
+	}
 	defer userDetailsRes.Body.Close()
 	return userDetail, nil
 }

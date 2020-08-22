@@ -12,7 +12,7 @@ WORKDIR /go/src
 
 ENV CGO_ENABLED=0 GO111MODULE=off
 
-RUN go vet
+#RUN go vet
 
 RUN go build -o main .
 
