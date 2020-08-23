@@ -31,7 +31,7 @@ type userObject struct {
 
 func main() {
 	http.HandleFunc("/validuser", validUser)
-	http.HandleFunc("/userdetails", userDetails)
+	http.HandleFunc("/userdetails", getUserDetails)
 	http.HandleFunc("/getmanageremails", getManagerEmails)
 	http.HandleFunc("/getmanagerdataquota", getManagerDataQuota)
 	http.HandleFunc("/getadminemails", getAdminEmails)
@@ -47,43 +47,27 @@ func validUser(res http.ResponseWriter, req *http.Request) {
 }
 
 // get user name /email
-func userDetails(res http.ResponseWriter, req *http.Request) {
+func getUserDetails(res http.ResponseWriter, req *http.Request) {
 
 	userIP := "192.168.10.16" //req.FormValue("userip")
 
 	// get user details for the IP
 	db := dbConn()
 
-	var userChain string
-	row := db.QueryRow("SELECT userChain FROM userDevices WHERE deviceIP=?", userIP)
+	var userDetail userObject
+	row := db.QueryRow("CALL GetUserDetails(?)", userIP)
 
-	err := row.Scan(&userChain)
-	if err != nil {
-		log.Println("Error getting user details", err)
-		res.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(res).Encode(userChain)
-	}
-	getUserDetails(res, userChain)
-	defer db.Close()
-}
-
-func getUserDetails(res http.ResponseWriter, userChain string) {
-	userDetail := userObject{}
-	db := dbConn()
-
-	row := db.QueryRow("SELECT email,isManager,defaultQuota FROM users WHERE userChain=?", userChain)
-
-	err := row.Scan(&userDetail.UserEmail, &userDetail.IsManager, &userDetail.DefaultQuota)
+	//scan sequence should be equal to user details return from SP
+	err := row.Scan(&userDetail.UserChain, &userDetail.UserEmail, &userDetail.IsManager, &userDetail.DefaultQuota)
 	if err != nil {
 		log.Println("Error getting user details", err)
 		res.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(res).Encode(userDetail)
 	}
 
-	defer db.Close()
-	log.Println("User details from  user service", userDetail)
 	res.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(res).Encode(userDetail)
+	defer db.Close()
 }
 
 func getManagerEmails(res http.ResponseWriter, req *http.Request) {
