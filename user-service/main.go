@@ -29,6 +29,9 @@ type userObject struct {
 	IsManager    bool
 }
 
+type managerDetails struct{
+	ManagerEmail string
+}
 func main() {
 	http.HandleFunc("/validuser", validUser)
 	http.HandleFunc("/userdetails", getUserDetails)
@@ -71,15 +74,30 @@ func getUserDetails(res http.ResponseWriter, req *http.Request) {
 }
 
 func getManagerEmails(res http.ResponseWriter, req *http.Request) {
-
+//GetManagersEmail
 	userChain := req.FormValue("userchain")
-	log.Println("User chain", userChain)
-	//DB call to get manager emails
-	managerEmails := []string{"sachith@vizuamatix.com", "sachithnalaka@gmail.com"}
+	db := dbConn()
+
+	rows,err := db.Query("CALL GetManagersEmail(?)", userChain)
+
+	if err != nil {
+        fmt.Println("Failed to run query", err)
+        return
+    }
+	managerEmails:=[]string{}
+    for rows.Next() {
+        var managerMail string
+        rows.Scan(&managerMail)
+        managerEmails = append(managerEmails, managerMail)
+    }
+
+    defer db.Close()
 	res.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(res).Encode(managerEmails)
-
+	
 }
+
+
 
 func getAdminEmails(res http.ResponseWriter, req *http.Request) {
 	adminEmails := []string{"msachithnalaka@yahoo.com", "janith@vx.com"}

@@ -27,6 +27,10 @@ type userObject struct {
 	IsManager    bool   `json: "ismanager"`
 }
 
+type managerDetails struct{
+	ManagerEmail string `json: "manageremail"`
+}
+
 var userservice = os.Getenv("USERSERVICE")
 var gatewayDB = os.Getenv("MYSQLDBGATEWAY")
 var notificationservice = os.Getenv("NOTIFICATIONSERVICE")
@@ -282,11 +286,16 @@ func getManagerEmails(userChain string) ([]string, error) {
 
 	err = managerEmailDecoder.Decode(&managerEmail)
 	if err != nil {
-		log.Println("Could not decode user details")
+		log.Println("Could not decode Manager details")
 		return managerEmail, err
 	}
 
+	// if managerEmail==""{
+	// 	log.Println("User Service did not send manager emails")
+	// 	return managerEmail, errors.New("User Service did not send valid email for managers")
+	// }
 	defer managerEmailsRes.Body.Close()
+	log.Println("Manager emails from main module : ",managerEmail)
 	return managerEmail, nil
 }
 
