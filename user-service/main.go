@@ -100,7 +100,23 @@ func getManagerEmails(res http.ResponseWriter, req *http.Request) {
 
 
 func getAdminEmails(res http.ResponseWriter, req *http.Request) {
-	adminEmails := []string{"msachithnalaka@yahoo.com", "janith@vx.com"}
+	
+	db := dbConn()
+	rows,err := db.Query("SELECT email FROM users where isAdmin=?", 1)
+
+	if err != nil {
+        fmt.Println("Failed to run query", err)
+        return
+    }
+	var adminEmails  []string
+
+    for rows.Next() {
+        var adminEmail string
+        rows.Scan(&adminEmail)
+        adminEmails = append(adminEmails, adminEmail)
+    }
+
+    defer db.Close()
 	res.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(res).Encode(adminEmails)
 }

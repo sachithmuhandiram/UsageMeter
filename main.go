@@ -114,7 +114,7 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 				log.Println("There is a problem getting admin emails")
 				return
 			}
-
+			log.Println("Admin emaisl : ",adminEmails)
 			requestedDataQuota := req.FormValue("data_amount")
 			managers := strings.Join(managerEmails, ",")
 			admins := strings.Join(adminEmails, ",")
