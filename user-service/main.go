@@ -38,6 +38,7 @@ func main() {
 	http.HandleFunc("/getmanageremails", getManagerEmails)
 	http.HandleFunc("/getmanagerdataquota", getManagerDataQuota)
 	http.HandleFunc("/getadminemails", getAdminEmails)
+	http.HandleFunc("/checkquota",checkQuota)
 	http.ListenAndServe(":7272", nil)
 }
 
@@ -63,14 +64,16 @@ func getUserDetails(res http.ResponseWriter, req *http.Request) {
 	//scan sequence should be equal to user details return from SP
 	err := row.Scan(&userDetail.UserChain, &userDetail.UserEmail, &userDetail.IsManager, &userDetail.DefaultQuota)
 	if err != nil {
+		db.Close()
 		log.Println("Error getting user details", err)
 		res.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(res).Encode(userDetail)
 	}
 
+	defer db.Close()
 	res.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(res).Encode(userDetail)
-	defer db.Close()
+	
 }
 
 func getManagerEmails(res http.ResponseWriter, req *http.Request) {
@@ -81,7 +84,8 @@ func getManagerEmails(res http.ResponseWriter, req *http.Request) {
 	rows,err := db.Query("CALL GetManagersEmail(?)", userChain)
 
 	if err != nil {
-        fmt.Println("Failed to run query", err)
+		fmt.Println("Failed to run query", err)
+		db.Close()
         return
     }
 	managerEmails:=[]string{}
@@ -96,8 +100,6 @@ func getManagerEmails(res http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(res).Encode(managerEmails)
 	
 }
-
-
 
 func getAdminEmails(res http.ResponseWriter, req *http.Request) {
 	
@@ -127,4 +129,17 @@ func getAdminEmails(res http.ResponseWriter, req *http.Request) {
 
 func getManagerDataQuota(res http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(res, "2000")
+}
+
+func checkQuota(res http.ResponseWriter, req *http.Request){
+
+	user := req.FormValue("user")
+	method := req.FormValue("method")
+
+	if (method == "db"){
+		log.Println("Call to database service to check user remaining data quota",user)
+		return
+	}
+	// read data from file
+
 }

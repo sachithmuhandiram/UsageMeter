@@ -8,9 +8,12 @@
 ```
 DELIMITER $$
 
-CREATE PROCEDURE SELECT userChain,email,isManager,defaultQuota from users WHERE userChain= (SELECT userChain FROM userDevices WHERE deviceIP=device_ip)
-END
+CREATE PROCEDURE GetUserDetails( IN  device_ip VARCHAR(16) ) BEGIN SELECT userChain,email,isManager,defaultQuota from users WHERE userChain= (SELECT userChain FROM userDevices WHERE deviceIP=device_ip); END
 $$
 
 DELIMITER ;
+```
+
+```
+CREATE PROCEDURE GetManagersEmail(IN user_chain varchar(50)) begin select email from users where userChain IN (select managerChain from userManagers where userChain=user_chain); END$$
 ```

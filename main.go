@@ -72,6 +72,19 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 				log.Println("There was a problem getting user data")
 				return
 			}
+			// get remaining data quota
+			eligibleToReq,err := checkRemainingQuota(userDetails.UserChain)
+
+			if err != nil{
+				log.Println("Error getting remaing data quota")
+				return
+			}
+
+			if eligibleToReq == false{
+				log.Println("User has sufficient data quota",userDetails.UserChain)
+				fmt.Fprintf(res, "You have sufficient data quota for this month")
+				return
+			}
 			// check whether he/she a manager
 
 			if userDetails.IsManager {
@@ -290,10 +303,6 @@ func getManagerEmails(userChain string) ([]string, error) {
 		return managerEmail, err
 	}
 
-	// if managerEmail==""{
-	// 	log.Println("User Service did not send manager emails")
-	// 	return managerEmail, errors.New("User Service did not send valid email for managers")
-	// }
 	defer managerEmailsRes.Body.Close()
 	log.Println("Manager emails from main module : ",managerEmail)
 	return managerEmail, nil
@@ -349,6 +358,28 @@ func getAdminEmails() ([]string, error) {
 	return adminEmail, nil
 }
 
+func checkRemainingQuota(user string)(bool,error){
+
+	var remainingQuotaChecker := os.Getenv("QUOTACHECK")
+	remainingQuota := userservice + "/checkquota"
+	remainingQuotaRes, err := http.PostForm(validUser, url.Values{"user": {user},"method":{remainingQuotaChecker}})
+
+	respBytes, err := ioutil.ReadAll(remainingQuotaRes.Body)
+	if err != nil {
+		log.Println("Couldn't read body of RemainingDataQuota")
+	}
+
+	respBool, err := strconv.ParseBool(string(respBytes))
+	if err != nil {
+		log.Println("Couldn't parse bool from RemainingDataQuota body")
+		return false,errors.New("Could not read remaining data quota response")
+	}
+	defer remainingQuotaRes.Body.Close()
+
+	return respBool,nil
+}
+
+
 func checkPendingRequest(user string) bool {
 	db := dbConn()
 
@@ -360,6 +391,7 @@ func checkPendingRequest(user string) bool {
 		log.Println("Error checking pendingRequest")
 	}
 	log.Println("check pending request : ", hasPendingReq)
+	defer db.Close()
 	return hasPendingReq
 }
 
