@@ -24,3 +24,11 @@ services:
       dockerfile: Dockerfile
     network_mode: "host"
     env_file: ./api.env
+  
+  notificationservice:
+    image: notificationservice
+    build: 
+      context: notification-service/
+      dockerfile: Dockerfile
+    network_mode: "host"
+    env_file: ./api.env

@@ -70,22 +70,42 @@
 <body>
 
  <div class="openBtn">
-      <button class="openButton" onclick="openForm()"><strong>Request Data</strong></button>
+      <button class="openButton" onclick="openBulkForm()"><strong>Bulk User Insert</strong></button>
+      
     </div>
     <div class="loginPopup">
-      <div class="formPopup" id="popupForm">
-        <form  class="formContainer"  id="my_form" action="http://usagemeter:7171/requestdata">
-          <h2>Please Request Data</h2>
-          <label for="data_amount">
-            <strong>Data Bundle</strong>
+      <div class="formPopup" id="popupBulkUserForm">
+        <form  class="formContainer"  id="my_form" action="http://usagemeter:7171/insertuserdevices">
+          <h2>Please User's Manager CSV</h2>
+          <label for="user_devices">
+            <strong>Upload CSV</strong>
           </label>
-          <input type="text" id="data_amount" name="data_amount" required>
+          <input id="upload" type="file" name="user_devices">
       <p id="data_check"> </p>
-          <button type="submit" class="btn">Request</button>
-          <button type="button" class="btn cancel" onclick="closeForm()">Cancel</button>
+          <button type="submit" class="btn">Upload</button>
+          <button type="button" class="btn cancel" onclick="closeBulkForm()">Cancel</button>
         </form>
       </div>
     </div>
+<br><br><br>
+    <!-- Single user insert-->
+    <!-- <div class="openBtn">
+    <button class="openButton" onclick="openUserForm()"><strong>Add a User</strong></button>
+  </div> -->
+  <!-- <div class="loginPopup">
+    <div class="formPopup" id="popupUserForm">
+      <form  class="formContainer"  id="my_form" action="http://usagemeter:7171/requestdata">
+        <h2>Please Insert a User</h2>
+        <label for="data_amount">
+          <strong>Data Bundle</strong>
+        </label>
+        <input type="text" id="data_amount" name="data_amount" required>
+    <p id="data_check"> </p>
+        <button type="submit" class="btn">Request</button>
+        <button type="button" class="btn cancel" onclick="closeUserForm()">Cancel</button>
+      </form>
+    </div>
+  </div> -->
 
 
 </body>
@@ -96,7 +116,7 @@ let msg = []
 my_form.addEventListener('submit',(e)=>{
 	
 	var myData = document.getElementById("data_amount").value;
-        if(isNaN(myData) || (myData ==0)){
+        if(isNaN(myData)){
         	msg.push('Please enter integer value only')
         }
         
@@ -107,12 +127,22 @@ my_form.addEventListener('submit',(e)=>{
 });
 </script>
 <script>
-      function openForm() {
+      function openBulkForm() {
         console.log("Open form")
-        document.getElementById("popupForm").style.display = "block";
+        document.getElementById("popupBulkUserForm").style.display = "block";
       }
-      function closeForm() {
-        document.getElementById("popupForm").style.display = "none";
+
+      function openUserForm() {
+        console.log("Open form")
+        document.getElementById("popupUserForm").style.display = "block";
+      }
+
+      function closeBulkForm() {
+        document.getElementById("popupBulkUserForm").style.display = "none";
+      }
+
+      function closeUserForm() {
+        document.getElementById("popupUserForm").style.display = "none";
       }
     </script>
 </html>
