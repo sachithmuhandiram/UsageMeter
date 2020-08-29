@@ -29,12 +29,16 @@ type userObject struct {
 	IsManager    bool
 }
 
+type managerDetails struct{
+	ManagerEmail string
+}
 func main() {
 	http.HandleFunc("/validuser", validUser)
 	http.HandleFunc("/userdetails", getUserDetails)
 	http.HandleFunc("/getmanageremails", getManagerEmails)
 	http.HandleFunc("/getmanagerdataquota", getManagerDataQuota)
 	http.HandleFunc("/getadminemails", getAdminEmails)
+	http.HandleFunc("/checkquota",checkQuota)
 	http.ListenAndServe(":7272", nil)
 }
 
@@ -60,29 +64,61 @@ func getUserDetails(res http.ResponseWriter, req *http.Request) {
 	//scan sequence should be equal to user details return from SP
 	err := row.Scan(&userDetail.UserChain, &userDetail.UserEmail, &userDetail.IsManager, &userDetail.DefaultQuota)
 	if err != nil {
+		db.Close()
 		log.Println("Error getting user details", err)
 		res.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(res).Encode(userDetail)
 	}
 
+	defer db.Close()
 	res.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(res).Encode(userDetail)
-	defer db.Close()
+	
 }
 
 func getManagerEmails(res http.ResponseWriter, req *http.Request) {
-
+//GetManagersEmail
 	userChain := req.FormValue("userchain")
-	log.Println("User chain", userChain)
-	//DB call to get manager emails
-	managerEmails := []string{"sachith@vizuamatix.com", "sachithnalaka@gmail.com"}
+	db := dbConn()
+
+	rows,err := db.Query("CALL GetManagersEmail(?)", userChain)
+
+	if err != nil {
+		fmt.Println("Failed to run query", err)
+		db.Close()
+        return
+    }
+	managerEmails:=[]string{}
+    for rows.Next() {
+        var managerMail string
+        rows.Scan(&managerMail)
+        managerEmails = append(managerEmails, managerMail)
+    }
+
+    defer db.Close()
 	res.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(res).Encode(managerEmails)
-
+	
 }
 
 func getAdminEmails(res http.ResponseWriter, req *http.Request) {
-	adminEmails := []string{"msachithnalaka@yahoo.com", "janith@vx.com"}
+	
+	db := dbConn()
+	rows,err := db.Query("SELECT email FROM users where isAdmin=?", 1)
+
+	if err != nil {
+        fmt.Println("Failed to run query", err)
+        return
+    }
+	var adminEmails  []string
+
+    for rows.Next() {
+        var adminEmail string
+        rows.Scan(&adminEmail)
+        adminEmails = append(adminEmails, adminEmail)
+    }
+
+    defer db.Close()
 	res.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(res).Encode(adminEmails)
 }
@@ -93,4 +129,17 @@ func getAdminEmails(res http.ResponseWriter, req *http.Request) {
 
 func getManagerDataQuota(res http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(res, "2000")
+}
+
+func checkQuota(res http.ResponseWriter, req *http.Request){
+
+	user := req.FormValue("user")
+	method := req.FormValue("method")
+
+	if (method == "db"){
+		log.Println("Call to database service to check user remaining data quota",user)
+		return
+	}
+	// read data from file
+
 }

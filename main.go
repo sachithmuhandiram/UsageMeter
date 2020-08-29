@@ -28,6 +28,10 @@ type userObject struct {
 	IsManager    bool   `json: "ismanager"`
 }
 
+type managerDetails struct{
+	ManagerEmail string `json: "manageremail"`
+}
+
 var userservice = os.Getenv("USERSERVICE")
 var gatewayDB = os.Getenv("MYSQLDBGATEWAY")
 var notificationservice = os.Getenv("NOTIFICATIONSERVICE")
@@ -67,6 +71,19 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 
 			if err != nil {
 				log.Println("There was a problem getting user data")
+				return
+			}
+			// get remaining data quota
+			eligibleToReq,err := checkRemainingQuota(userDetails.UserChain)
+
+			if err != nil{
+				log.Println("Error getting remaing data quota")
+				return
+			}
+
+			if eligibleToReq == false{
+				log.Println("User has sufficient data quota",userDetails.UserChain)
+				fmt.Fprintf(res, "You have sufficient data quota for this month")
 				return
 			}
 			// check whether he/she a manager
@@ -112,7 +129,7 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 				log.Println("There is a problem getting admin emails")
 				return
 			}
-
+			log.Println("Admin emaisl : ",adminEmails)
 			requestedDataQuota := req.FormValue("data_amount")
 			managers := strings.Join(managerEmails, ",")
 			admins := strings.Join(adminEmails, ",")
@@ -286,11 +303,12 @@ func getManagerEmails(userChain string) ([]string, error) {
 
 	err = managerEmailDecoder.Decode(&managerEmail)
 	if err != nil {
-		log.Println("Could not decode user details")
+		log.Println("Could not decode Manager details")
 		return managerEmail, err
 	}
 
 	defer managerEmailsRes.Body.Close()
+	log.Println("Manager emails from main module : ",managerEmail)
 	return managerEmail, nil
 }
 
@@ -351,6 +369,28 @@ func getAdminEmails() ([]string, error) {
 	return adminEmail, nil
 }
 
+func checkRemainingQuota(user string)(bool,error){
+
+	var remainingQuotaChecker := os.Getenv("QUOTACHECK")
+	remainingQuota := userservice + "/checkquota"
+	remainingQuotaRes, err := http.PostForm(validUser, url.Values{"user": {user},"method":{remainingQuotaChecker}})
+
+	respBytes, err := ioutil.ReadAll(remainingQuotaRes.Body)
+	if err != nil {
+		log.Println("Couldn't read body of RemainingDataQuota")
+	}
+
+	respBool, err := strconv.ParseBool(string(respBytes))
+	if err != nil {
+		log.Println("Couldn't parse bool from RemainingDataQuota body")
+		return false,errors.New("Could not read remaining data quota response")
+	}
+	defer remainingQuotaRes.Body.Close()
+
+	return respBool,nil
+}
+
+
 func checkPendingRequest(user string) bool {
 	db := dbConn()
 
@@ -362,6 +402,7 @@ func checkPendingRequest(user string) bool {
 		log.Println("Error checking pendingRequest")
 	}
 	log.Println("check pending request : ", hasPendingReq)
+	defer db.Close()
 	return hasPendingReq
 }
 
