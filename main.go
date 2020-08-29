@@ -321,6 +321,7 @@ func addQuotaToManager(userChain string) bool {
 		log.Println("Problem getting data quota to manager :", userChain)
 		return false
 	}
+	// get default quota from both databases (sme-backend and usagemeter)
 	// call to adddataquota script
 	hasQuotaAddedToManager := callAddQuotaScript(userChain, managerDataQuota)
 
