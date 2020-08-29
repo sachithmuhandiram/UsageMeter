@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
@@ -81,6 +82,7 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 
 				if addedDataQuotatoManager {
 					log.Println("Added data quota to Manager : ", userDetails.UserChain)
+					fmt.Fprintf(res, "Data Quota added")
 					// send an email to manager yet to develop
 					return
 				}
@@ -92,7 +94,7 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 			hasPendingReq := checkPendingRequest(userDetails.UserChain)
 
 			if hasPendingReq {
-				fmt.Fprintf(res, "You have a pending data quota request")
+				fmt.Fprintf(res, "Data Quota added")
 				return
 			}
 			// user details are ok, take manager emails
@@ -127,10 +129,12 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 			//insert record to pendingRequest table | userchain | 1
 			insertToPendingRequest(userDetails.UserChain)
 		} else {
+			// Valide IP address else loop
 			log.Println("Wrong IP address. No user for this IP address  : ", userIP)
 		}
 
 	} else {
+		// Validate user input else
 		fmt.Fprintf(res, "Wrong input!")
 	}
 
@@ -295,15 +299,21 @@ func addQuotaToManager(userChain string) bool {
 
 	managerDataQuota := getManagerDataQuota() // convert to int
 
-	if managerDataQuota == "" {
+	if managerDataQuota == 0 {
 		log.Println("Problem getting data quota to manager :", userChain)
 		return false
 	}
 	// call to adddataquota script
-	return true
+	hasQuotaAddedToManager := callAddQuotaScript(userChain, managerDataQuota)
+
+	if hasQuotaAddedToManager {
+		return true
+	}
+
+	return false
 }
 
-func getManagerDataQuota() string {
+func getManagerDataQuota() int {
 
 	getManagerDataQuota := userservice + "/getmanagerdataquota"
 
@@ -311,7 +321,7 @@ func getManagerDataQuota() string {
 
 	if err != nil {
 		log.Println("Error posting data to user service")
-		return ""
+		return 0
 	}
 	bodyBytes, err := ioutil.ReadAll(managerQuota.Body)
 	if err != nil {
@@ -319,7 +329,8 @@ func getManagerDataQuota() string {
 	}
 	managerDataQuota := string(bodyBytes)
 
-	return managerDataQuota
+	quota, _ := strconv.Atoi(managerDataQuota)
+	return quota
 }
 
 func getAdminEmails() ([]string, error) {
@@ -365,4 +376,18 @@ func insertToPendingRequest(user string) {
 	insData.Exec(user, 1)
 	log.Println("Inserted record to pendingRequest table for user : ", user)
 	defer db.Close()
+}
+
+func callAddQuotaScript(userChain string, managerDataQuota int) bool {
+
+	cmd, err := exec.Command("/bin/sh", "test.sh", userChain, strconv.Itoa(managerDataQuota)).Output()
+
+	if err != nil {
+		log.Println("There is a problem calling to Add quota script", err)
+		return false
+	}
+
+	scriptRes := string(cmd)
+	log.Println("Script returned", scriptRes)
+	return true
 }
