@@ -388,7 +388,7 @@ func checkRemainingQuota(user string) (bool, error) {
 	// }
 	// defer remainingQuotaRes.Body.Close()
 
-	return respBool, nil
+	return false, nil
 }
 
 func checkPendingRequest(user string) bool {
