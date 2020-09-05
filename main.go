@@ -74,12 +74,12 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 				return
 			}
 			// get remaining data quota
-			// eligibleToReq, err := checkRemainingQuota(userDetails.UserChain)
-
-			// if err != nil {
-			// 	log.Println("Error getting remaing data quota")
-			// 	return
-			// }
+		//	eligibleToReq, err := checkRemainingQuota(userDetails.UserChain)
+			_,err = eligibleToRequstQuota(userDetails.UserChain)
+			if err != nil {
+				log.Println("Error getting remaing data quota")
+				return
+			}
 
 			// if eligibleToReq == false {
 			// 	log.Println("User has sufficient data quota", userDetails.UserChain)
@@ -370,23 +370,24 @@ func getAdminEmails() ([]string, error) {
 	return adminEmail, nil
 }
 
-func checkRemainingQuota(user string) (bool, error) {
+func eligibleToRequstQuota(user string) (bool, error) {
 
-	//var remainingQuotaChecker := os.Getenv("QUOTACHECK")
-	// remainingQuota := userservice + "/checkquota"
-	// remainingQuotaRes, err := http.PostForm(validUser, url.Values{"user": {user}, "method": {remainingQuotaChecker}})
+	validToReq := userservice+ "/checkquota"
+	remainingQuotaChecker := os.Getenv("QUOTACHECK")
+	
+	remainingQuotaRes, err := http.PostForm(validToReq, url.Values{"user": {user}, "method": {remainingQuotaChecker}})
 
-	// respBytes, err := ioutil.ReadAll(remainingQuotaRes.Body)
-	// if err != nil {
-	// 	log.Println("Couldn't read body of RemainingDataQuota")
-	// }
+	respBytes, err := ioutil.ReadAll(remainingQuotaRes.Body)
+	if err != nil {
+		log.Println("Couldn't read body of RemainingDataQuota")
+	}
 
-	// respBool, err := strconv.ParseBool(string(respBytes))
-	// if err != nil {
-	// 	log.Println("Couldn't parse bool from RemainingDataQuota body")
-	// 	return false, errors.New("Could not read remaining data quota response")
-	// }
-	// defer remainingQuotaRes.Body.Close()
+	_, err = strconv.ParseBool(string(respBytes))
+	if err != nil {
+		log.Println("Couldn't parse bool from RemainingDataQuota body")
+		return false, errors.New("Could not read remaining data quota response")
+	}
+	defer remainingQuotaRes.Body.Close()
 
 	return false, nil
 }

@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -53,7 +54,7 @@ func validUser(res http.ResponseWriter, req *http.Request) {
 // get user name /email
 func getUserDetails(res http.ResponseWriter, req *http.Request) {
 
-	userIP := "192.168.10.16" //req.FormValue("userip")
+	userIP := "192.168.10.38" //req.FormValue("userip")
 
 	// get user details for the IP
 	db := dbConn()
@@ -136,10 +137,27 @@ func checkQuota(res http.ResponseWriter, req *http.Request){
 	user := req.FormValue("user")
 	method := req.FormValue("method")
 
-	if (method == "db"){
+	if (method == "db"){	// possible limitation, this should come from db table
 		log.Println("Call to database service to check user remaining data quota",user)
 		return
 	}
+	// method is file
+//	var remainingQuotaChecker = os.Getenv("QUOTACHECK")
+	currentTime := time.Now()
+  
+  	month := currentTime.Format("2006-01")
 	// read data from file
+	availableQuota := readDataFile(user,month)
 
+	log.Println("Month and file: ",availableQuota)
+	fmt.Fprintf(res, "false")
+
+}
+
+func readDataFile(user string,month string) int{
+
+	log.Println("User to read from file : ",user)
+	log.Println("file to read ",month)
+
+	return 50
 }
