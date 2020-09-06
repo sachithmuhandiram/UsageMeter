@@ -150,6 +150,10 @@ func checkQuota(res http.ResponseWriter, req *http.Request){
 	availableQuota := readDataFile(user,month)
 
 	log.Println("Month and file: ",availableQuota)
+	// get user's min data quota
+
+	//compare them. for normal users, 1 GB managers 2-GB
+
 	fmt.Fprintf(res, "false")
 
 }
@@ -158,6 +162,12 @@ func readDataFile(user string,month string) int{
 
 	log.Println("User to read from file : ",user)
 	log.Println("file to read ",month)
+
+	quotaFileLocation := os.Getenv("QUOTAFILE")
+
+	monthQuotaFile := quotaFileLocation+"/"+month+".txt"
+
+	log.Println("Monthly quota file",monthQuotaFile)
 
 	return 50
 }
