@@ -135,6 +135,7 @@ func getManagerDataQuota(res http.ResponseWriter, req *http.Request) {
 func checkQuota(res http.ResponseWriter, req *http.Request){
 
 	user := req.FormValue("user")
+	userType := req.FormValue("usertype")
 	method := req.FormValue("method")
 
 	if (method == "db"){	// possible limitation, this should come from db table
@@ -147,9 +148,11 @@ func checkQuota(res http.ResponseWriter, req *http.Request){
   
   	month := currentTime.Format("2006-01")
 	// read data from file
-	availableQuota := readDataFile(user,month)
+	availableQuota,err := availableDataQuota(user,month)
 
-	log.Println("Month and file: ",availableQuota)
+	if err := nil{
+		log.Println("Couldnt find record for user : ",user)
+	}
 	// get user's min data quota
 
 	//compare them. for normal users, 1 GB managers 2-GB
@@ -158,7 +161,8 @@ func checkQuota(res http.ResponseWriter, req *http.Request){
 
 }
 
-func readDataFile(user string,month string) int{
+// readDataFile
+func availableDataQuota(user string,month string) (int,error){
 
 	log.Println("User to read from file : ",user)
 	log.Println("file to read ",month)
@@ -167,7 +171,35 @@ func readDataFile(user string,month string) int{
 
 	monthQuotaFile := quotaFileLocation+"/"+month+".txt"
 
-	log.Println("Monthly quota file",monthQuotaFile)
+	userQuota,currentUsage := getQuotaAndUsage(user,monthQuotaFile)
 
-	return 50
+	if (userQuota = 0 && currentUsage = 0){
+		return 0, errors.New("No user record found for ",user)
+	}
+
+	return (userQuota-currentUsage),nil
+	// 
+}
+
+// return user's current usage and userQuota
+func getQuotaAndUsage(user string, file string)(int,int){
+
+	usageFile, err := os.Open("emp.csv")
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("Successfully Opened CSV file")
+	defer usageFile.Close()
+
+	csvLines, err := csv.NewReader(usageFile).ReadAll()
+    if err != nil {
+        fmt.Println(err)
+    }    
+    for _, line := range csvLines {
+        if (line[0]==user){
+			return line[2],line[3]
+		}
+	}
+	
+	return 0,0
 }

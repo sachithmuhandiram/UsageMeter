@@ -323,9 +323,9 @@ func addQuotaToManager(userChain string) bool {
 	}
 	// get default quota from both databases (sme-backend and usagemeter)
 	// call to adddataquota script
-	hasQuotaAddedToManager := callAddQuotaScript(userChain, managerDataQuota)
+	quotaAddedToManager := callAddQuotaScript(userChain, managerDataQuota)
 
-	if hasQuotaAddedToManager {
+	if quotaAddedToManager {
 		return true
 	}
 
@@ -370,12 +370,14 @@ func getAdminEmails() ([]string, error) {
 	return adminEmail, nil
 }
 
+// need to update this to accept normal users and managers
 func eligibleToRequstQuota(user string) (bool, error) {
 
 	validToReq := userservice+ "/checkquota"
 	remainingQuotaChecker := os.Getenv("QUOTACHECK")
 	
-	remainingQuotaRes, err := http.PostForm(validToReq, url.Values{"user": {user}, "method": {remainingQuotaChecker}})
+	// usertype 0 for normal users and 1 for managers
+	remainingQuotaRes, err := http.PostForm(validToReq, url.Values{"user": {user}, "usertype":{0},"method": {remainingQuotaChecker}})
 
 	respBytes, err := ioutil.ReadAll(remainingQuotaRes.Body)
 	if err != nil {
