@@ -141,6 +141,7 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 
 				//insert record to pendingRequest table | userchain | 1
 				insertToPendingRequest(userDetails.UserChain)
+				return
 			// normal user request
 
 			} // eligble to request quota if
@@ -388,18 +389,19 @@ func eligibleToRequstQuota(user string,manager bool) (bool, error) {
 	remainingQuotaRes, err := http.PostForm(validToReq, url.Values{"user": {user}, "usertype":{isManager},"method": {remainingQuotaChecker}})
 
 	respBytes, err := ioutil.ReadAll(remainingQuotaRes.Body)
+	defer remainingQuotaRes.Body.Close()
+
 	if err != nil {
 		log.Println("Couldn't read body of RemainingDataQuota")
 	}
 
-	_, err = strconv.ParseBool(string(respBytes))
+	eligibleToReq, err := strconv.ParseBool(string(respBytes))
 	if err != nil {
-		log.Println("Couldn't parse bool from RemainingDataQuota body")
+		log.Println("Couldn't parse bool from RemainingDataQuota body",err)
 		return false, errors.New("Could not read remaining data quota response")
 	}
-	defer remainingQuotaRes.Body.Close()
 
-	return false, nil
+	return eligibleToReq, nil
 }
 
 func checkPendingRequest(user string) bool {

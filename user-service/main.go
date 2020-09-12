@@ -158,18 +158,22 @@ func checkQuota(res http.ResponseWriter, req *http.Request){
 		minimumQuotaLimit := getManagerDataQuotaLimit()
 		if (availableQuota > minimumQuotaLimit){
 			fmt.Fprintf(res, "false")
+			return
 		}
 		
 		fmt.Fprintf(res, "true")
+		return
 	}
 	// for normal user
 	minimumQuotaLimit := getUserDataQuotaLimit()
-	
+	log.Println("Available and minimum quotas : ",availableQuota,minimumQuotaLimit)
 	if (availableQuota > minimumQuotaLimit){
 		fmt.Fprintf(res, "false")
+		return
 	}
 	
 	fmt.Fprintf(res, "true")
+	return
 }
 
 // readDataFile
@@ -178,9 +182,9 @@ func availableDataQuota(user string,month string) (int,error){
 	log.Println("User to read from file : ",user)
 	log.Println("file to read ",month)
 
-	quotaFileLocation := os.Getenv("QUOTAFILE")
+	//quotaFileLocation := os.Getenv("QUOTAFILE")
 
-	monthQuotaFile := quotaFileLocation+"/"+month+".txt"
+	monthQuotaFile := "/files/"+month+".txt" //quotaFileLocation+"/"+
 
 	userQuota,currentUsage := getQuotaAndUsage(user,monthQuotaFile)
 
@@ -188,10 +192,10 @@ func availableDataQuota(user string,month string) (int,error){
 		return 0, errors.New("No user record found for this user")
 	}
 
-	currentUsage = (currentUsage/(1024*1024*1024))
-	userQuota = (userQuota/(1024*1024*1024))
+	currentUsage = (currentUsage/(1024*1024))
+	userQuota = (userQuota/(1024*1024))
 log.Println("User's current usage ",currentUsage)
-log.Println("User's current usage ",userQuota)
+log.Println("User's quota ",userQuota)
 	return (userQuota-currentUsage),nil // this is in bytes
 	// 
 }
