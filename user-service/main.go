@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"errors"
+	"encoding/csv"
+	"strconv"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -37,7 +40,7 @@ func main() {
 	http.HandleFunc("/validuser", validUser)
 	http.HandleFunc("/userdetails", getUserDetails)
 	http.HandleFunc("/getmanageremails", getManagerEmails)
-	http.HandleFunc("/getmanagerdataquota", getManagerDataQuota)
+//	http.HandleFunc("/getmanagerdataquota", getManagerDataQuota)
 	http.HandleFunc("/getadminemails", getAdminEmails)
 	http.HandleFunc("/checkquota",checkQuota)
 	http.ListenAndServe(":7272", nil)
@@ -128,14 +131,10 @@ func getAdminEmails(res http.ResponseWriter, req *http.Request) {
 
 // send response back to frontened
 
-func getManagerDataQuota(res http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(res, "2000")
-}
-
 func checkQuota(res http.ResponseWriter, req *http.Request){
 
 	user := req.FormValue("user")
-	userType := req.FormValue("usertype")
+	isManager := req.FormValue("usertype") // true /false is returned as string
 	method := req.FormValue("method")
 
 	if (method == "db"){	// possible limitation, this should come from db table
@@ -150,15 +149,27 @@ func checkQuota(res http.ResponseWriter, req *http.Request){
 	// read data from file
 	availableQuota,err := availableDataQuota(user,month)
 
-	if err := nil{
+	if err != nil{
 		log.Println("Couldnt find record for user : ",user)
 	}
 	// get user's min data quota
-
-	//compare them. for normal users, 1 GB managers 2-GB
-
-	fmt.Fprintf(res, "false")
-
+	if isManager == "true"{
+		//get managers min quota
+		minimumQuotaLimit := getManagerDataQuotaLimit()
+		if (availableQuota > minimumQuotaLimit){
+			fmt.Fprintf(res, "false")
+		}
+		
+		fmt.Fprintf(res, "true")
+	}
+	// for normal user
+	minimumQuotaLimit := getUserDataQuotaLimit()
+	
+	if (availableQuota > minimumQuotaLimit){
+		fmt.Fprintf(res, "false")
+	}
+	
+	fmt.Fprintf(res, "true")
 }
 
 // readDataFile
@@ -173,18 +184,22 @@ func availableDataQuota(user string,month string) (int,error){
 
 	userQuota,currentUsage := getQuotaAndUsage(user,monthQuotaFile)
 
-	if (userQuota = 0 && currentUsage = 0){
-		return 0, errors.New("No user record found for ",user)
+	if ((userQuota == 0) && (currentUsage == 0)){
+		return 0, errors.New("No user record found for this user")
 	}
 
-	return (userQuota-currentUsage),nil
+	currentUsage = (currentUsage/(1024*1024*1024))
+	userQuota = (userQuota/(1024*1024*1024))
+log.Println("User's current usage ",currentUsage)
+log.Println("User's current usage ",userQuota)
+	return (userQuota-currentUsage),nil // this is in bytes
 	// 
 }
 
 // return user's current usage and userQuota
 func getQuotaAndUsage(user string, file string)(int,int){
 
-	usageFile, err := os.Open("emp.csv")
+	usageFile, err := os.Open(file)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -197,9 +212,22 @@ func getQuotaAndUsage(user string, file string)(int,int){
     }    
     for _, line := range csvLines {
         if (line[0]==user){
-			return line[2],line[3]
+			quota,_ := strconv.Atoi(line[2])
+			usage,_ := strconv.Atoi(line[3])
+			return quota,usage
 		}
 	}
 	
 	return 0,0
+}
+
+
+func getManagerDataQuotaLimit() int {
+
+	return 2000
+	// This is only for testing, should get from DB
+}
+
+func getUserDataQuotaLimit()int{
+	return 1000
 }

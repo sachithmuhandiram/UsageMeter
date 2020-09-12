@@ -63,7 +63,7 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 	*/
 	if validUserInput {
 
-		validIP := checkIP(userIP)
+		validIP := validUserIP(userIP)
 
 		if validIP {
 
@@ -75,27 +75,26 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 			}
 			// check whether he/she a manager
 
-			if userDetails.IsManager {
+			if (userDetails.DefaultQuota == 0 ){
 
-				if userDetails.DefaultQuota == 0 {
-					fmt.Fprintf(res, "You have no data quota restrictions")
-					return
-				}
-
-				// check without return here
+				fmt.Fprintf(res, "You have no data quota restrictions")
+				return
 
 			} // super manager without quota limitations
 
-				// this is wrong, Dont repeat 
-				_,err = eligibleToRequstQuota(userDetails.UserChain,userDetails.IsManager)
-				if err != nil {
-					log.Println("Error getting remaing data quota")
-					return
-				}
+			eligibleToRequest,err := eligibleToRequstQuota(userDetails.UserChain,userDetails.IsManager)
 
-				addedDataQuotatoManager := addQuotaToManager(userDetails.UserChain)
+			if err != nil {
+				log.Println("Error getting user's remaing data quota",userDetails.UserChain)
+				return
+			}
 
-				if addedDataQuotatoManager {
+			if eligibleToRequest{
+
+				if (userDetails.IsManager){
+					addDataQuotatoManager := addQuotaToManager(userDetails.UserChain)
+
+				if addDataQuotatoManager {
 					log.Println("Added data quota to Manager : ", userDetails.UserChain)
 					fmt.Fprintf(res, "Data Quota added")
 					// send an email to manager yet to develop
@@ -103,62 +102,56 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 				}
 				log.Println("There is a problem adding data quota to manager : ", userDetails.UserChain)
 				return
+				} // manager quota request
 
-			
-			// get remaining data quota
-		//	eligibleToReq, err := checkRemainingQuota(userDetails.UserChain)
-		_,err = eligibleToRequstQuota(userDetails.UserChain)
-		if err != nil {
-			log.Println("Error getting remaing data quota")
+				hasPendingReq := checkPendingRequest(userDetails.UserChain)
+
+				if hasPendingReq {
+					fmt.Fprintf(res, "You have pending data quota requests")
+					return
+				}
+				// user details are ok, take manager emails
+				managerEmails, err := getManagerEmails(userDetails.UserChain)
+
+				if err != nil {
+					log.Println("There is a problem with getting managers emails for User : ", userDetails.UserChain)
+					return
+				}
+				// got manager emails
+
+				adminEmails, err := getAdminEmails()
+
+				if err != nil {
+					log.Println("There is a problem getting admin emails")
+					return
+				}
+				log.Println("Admin emaisl : ", adminEmails)
+				requestedDataQuota := req.FormValue("data_amount")
+				managers := strings.Join(managerEmails, ",")
+				admins := strings.Join(adminEmails, ",")
+				sentQuotaReq := dataQuotaRequest(userDetails.UserChain, requestedDataQuota, managers, admins)
+
+				if sentQuotaReq != true {
+					log.Println("There was a problem sending quota request email for user : ", userDetails.UserChain)
+					return
+				}
+				log.Printf("Data quota request for %s email sent to managers", userDetails.UserChain)
+
+				fmt.Fprintf(res, "Data requested sucessfully")
+
+				//insert record to pendingRequest table | userchain | 1
+				insertToPendingRequest(userDetails.UserChain)
+			// normal user request
+
+			} // eligble to request quota if
+
+			fmt.Fprintf(res, "You have sufficient data quota for this month")
 			return
-		}
-
-		// if eligibleToReq == false {
-		// 	log.Println("User has sufficient data quota", userDetails.UserChain)
-		// 	fmt.Fprintf(res, "You have sufficient data quota for this month")
-		// 	return
-		// }
-			// check user has pending request pendingRequest table
-			hasPendingReq := checkPendingRequest(userDetails.UserChain)
-
-			if hasPendingReq {
-				fmt.Fprintf(res, "Data Quota added")
-				return
-			}
-			// user details are ok, take manager emails
-			managerEmails, err := getManagerEmails(userDetails.UserChain)
-
-			if err != nil {
-				log.Println("There is a problem with getting managers emails for User : ", userDetails.UserChain)
-				return
-			}
-			// got manager emails
-
-			adminEmails, err := getAdminEmails()
-
-			if err != nil {
-				log.Println("There is a problem getting admin emails")
-				return
-			}
-			log.Println("Admin emaisl : ", adminEmails)
-			requestedDataQuota := req.FormValue("data_amount")
-			managers := strings.Join(managerEmails, ",")
-			admins := strings.Join(adminEmails, ",")
-			sentQuotaReq := dataQuotaRequest(userDetails.UserChain, requestedDataQuota, managers, admins)
-
-			if sentQuotaReq != true {
-				log.Println("There was a problem sending quota request email for user : ", userDetails.UserChain)
-				return
-			}
-			log.Printf("Data quota request for %s email sent to managers", userDetails.UserChain)
-
-			fmt.Fprintf(res, "Data requested sucessfully")
-
-			//insert record to pendingRequest table | userchain | 1
-			insertToPendingRequest(userDetails.UserChain)
+			
 		} else {
 			// Valide IP address else loop
 			log.Println("Wrong IP address. No user for this IP address  : ", userIP)
+			fmt.Fprintf(res, "Sorry, your device is not listed in our system")
 		}
 
 	} else {
@@ -257,21 +250,25 @@ func insertUserDevices(res http.ResponseWriter, req *http.Request) {
 	defer db.Close()
 }
 
-func checkIP(userIP string) bool {
+func validUserIP(userIP string) bool {
 
 	validUser := userservice + "/validuser"
 	validUserRes, err := http.PostForm(validUser, url.Values{"userip": {userIP}})
 
 	respBytes, err := ioutil.ReadAll(validUserRes.Body)
+	defer validUserRes.Body.Close()
+
 	if err != nil {
 		log.Println("Couldn't read body")
+		return false
 	}
 
 	respBool, err := strconv.ParseBool(string(respBytes))
 	if err != nil {
 		log.Println("Couldn't parse bool from body")
+		return false
 	}
-	defer validUserRes.Body.Close()
+	
 
 	return respBool
 }
@@ -382,11 +379,11 @@ func getAdminEmails() ([]string, error) {
 }
 
 // need to update this to accept normal users and managers
-func eligibleToRequstQuota(user string,isManager int) (bool, error) {
+func eligibleToRequstQuota(user string,manager bool) (bool, error) {
 
 	validToReq := userservice+ "/checkquota"
 	remainingQuotaChecker := os.Getenv("QUOTACHECK")
-	
+	isManager := strconv.FormatBool(manager)
 	// usertype 0 for normal users and 1 for managers
 	remainingQuotaRes, err := http.PostForm(validToReq, url.Values{"user": {user}, "usertype":{isManager},"method": {remainingQuotaChecker}})
 

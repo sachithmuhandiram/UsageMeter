@@ -17,3 +17,21 @@ DELIMITER ;
 ```
 CREATE PROCEDURE GetManagersEmail(IN user_chain varchar(50)) begin select email from users where userChain IN (select managerChain from userManagers where userChain=user_chain); END$$
 ```
+
+Int to String convert
+
+```
+import (
+    "strconv"
+    "fmt"
+)
+
+func main() {
+    t := strconv.Itoa(123)
+    fmt.Println(t)
+}
+```
+
+String to Int
+
+`strconv.Atoi(string)`
