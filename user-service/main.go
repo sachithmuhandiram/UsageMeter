@@ -57,7 +57,7 @@ func validUser(res http.ResponseWriter, req *http.Request) {
 // get user name /email
 func getUserDetails(res http.ResponseWriter, req *http.Request) {
 
-	userIP := "192.168.10.38" //req.FormValue("userip")
+	userIP := "192.168.10.16" //req.FormValue("userip")
 
 	// get user details for the IP
 	db := dbConn()

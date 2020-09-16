@@ -35,9 +35,10 @@ type managerDetails struct {
 var userservice = os.Getenv("USERSERVICE")
 var gatewayDB = os.Getenv("MYSQLDBGATEWAY")
 var notificationservice = os.Getenv("NOTIFICATIONSERVICE")
+var oldDB = os.Getenv("MYSQLOLDSYSTEM")
 
-func dbConn() (db *sql.DB) {
-	db, err := sql.Open("mysql", gatewayDB)
+func dbConn(database string) (db *sql.DB) {
+	db, err := sql.Open("mysql", database)
 
 	if err != nil {
 		log.Println("Cant open database connection")
@@ -214,7 +215,7 @@ func bulkUserInsert(res http.ResponseWriter, req *http.Request) {
 
 	bulkDataFile := req.FormValue("bulk_data")
 
-	db := dbConn()
+	db := dbConn(gatewayDB)
 	mysql.RegisterLocalFile(bulkDataFile)
 	_, err := db.Exec("LOAD DATA LOCAL INFILE '" + bulkDataFile + "' INTO TABLE users FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n'")
 	if err != nil {
@@ -228,7 +229,7 @@ func insertManagersToUser(res http.ResponseWriter, req *http.Request) {
 
 	bulkDataFile := req.FormValue("user_managers")
 
-	db := dbConn()
+	db := dbConn(gatewayDB)
 	mysql.RegisterLocalFile(bulkDataFile)
 	_, err := db.Exec("LOAD DATA LOCAL INFILE '" + bulkDataFile + "' INTO TABLE userManagers FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n'")
 	if err != nil {
@@ -241,7 +242,7 @@ func insertManagersToUser(res http.ResponseWriter, req *http.Request) {
 func insertUserDevices(res http.ResponseWriter, req *http.Request) {
 	bulkDataFile := req.FormValue("user_devices")
 
-	db := dbConn()
+	db := dbConn(gatewayDB)
 	mysql.RegisterLocalFile(bulkDataFile)
 	_, err := db.Exec("LOAD DATA LOCAL INFILE '" + bulkDataFile + "' INTO TABLE userDevices FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' (userChain,deviceIP) SET isActive=1;")
 	if err != nil {
@@ -326,13 +327,17 @@ func addQuotaToManager(userChain string) bool {
 
 	managerDataQuota := getManagerDataQuota() // convert to int
 
+	oldQuota := getCurrentQuota(userChain)
+
 	if managerDataQuota == 0 {
 		log.Println("Problem getting data quota to manager :", userChain)
 		return false
 	}
 	// get default quota from both databases (sme-backend and usagemeter)
 	// call to adddataquota script
-	quotaAddedToManager := callAddQuotaScript(userChain, managerDataQuota)
+	newQuota := managerDataQuota + oldQuota
+
+	quotaAddedToManager := callAddQuotaScript(userChain,oldQuota,newQuota )
 
 	if quotaAddedToManager {
 		return true
@@ -405,7 +410,7 @@ func eligibleToRequstQuota(user string,manager bool) (bool, error) {
 }
 
 func checkPendingRequest(user string) bool {
-	db := dbConn()
+	db := dbConn(gatewayDB)
 
 	var hasPendingReq bool
 	row := db.QueryRow("SELECT EXISTS(SELECT id FROM pendingRequest WHERE userChain=? AND isPending=1)", user)
@@ -421,7 +426,7 @@ func checkPendingRequest(user string) bool {
 
 func insertToPendingRequest(user string) {
 	// insert into pendingRequest table
-	db := dbConn()
+	db := dbConn(gatewayDB)
 
 	insData, err := db.Prepare("INSERT INTO pendingRequest (userChain,isPending) VALUES(?,?)")
 	if err != nil {
@@ -432,9 +437,11 @@ func insertToPendingRequest(user string) {
 	defer db.Close()
 }
 
-func callAddQuotaScript(userChain string, managerDataQuota int) bool {
+func callAddQuotaScript(userChain string, oldQuota int,newQuota int) bool {
 
-	cmd, err := exec.Command("/bin/sh", "test.sh", userChain, strconv.Itoa(managerDataQuota)).Output()
+	//updateDataQuota.sh chain oldQuota newQuota
+
+	cmd, err := exec.Command("/bin/sh", "test.sh", userChain, strconv.Itoa(oldQuota),strconv.Itoa(newQuota)).Output()
 
 	if err != nil {
 		log.Println("There is a problem calling to Add quota script", err)
@@ -444,4 +451,20 @@ func callAddQuotaScript(userChain string, managerDataQuota int) bool {
 	scriptRes := string(cmd)
 	log.Println("Script returned", scriptRes)
 	return true
+}
+
+func getCurrentQuota(userChain string)int{
+	// read from sme-backend db
+	db := dbConn(oldDB)
+
+	var currentQutoa int
+	row := db.QueryRow("SELECT data_quota FROM users WHERE ip_chain=? AND status=1", userChain)
+	defer db.Close()
+	err := row.Scan(&currentQutoa)
+	if err != nil {
+		log.Println("Error checking user's current data quota",userChain)
+		return 0
+	}
+
+	return currentQutoa
 }
