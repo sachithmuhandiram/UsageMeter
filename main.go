@@ -102,6 +102,7 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 					return
 				}
 				log.Println("There is a problem adding data quota to manager : ", userDetails.UserChain)
+				fmt.Fprintf(res, "Sorry, something not right in our side")
 				return
 				} // manager quota request
 
@@ -463,6 +464,7 @@ func getCurrentQuota(userChain string)int{
 	err := row.Scan(&currentQutoa)
 	if err != nil {
 		log.Println("Error checking user's current data quota",userChain)
+		log.Println("Error : ",err)
 		return 0
 	}
 
