@@ -112,6 +112,12 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 					fmt.Fprintf(res, "You have pending data quota requests")
 					return
 				}
+
+				requestedDataQuota := req.FormValue("data_amount")
+				if requestedDataQuota > 5 {
+					fmt.Fprintf(res, "Maximum data quota request is 5GB")
+					return
+				}
 				// user details are ok, take manager emails
 				managerEmails, err := getManagerEmails(userDetails.UserChain)
 
@@ -127,8 +133,7 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 					log.Println("There is a problem getting admin emails")
 					return
 				}
-				log.Println("Admin emaisl : ", adminEmails)
-				requestedDataQuota := req.FormValue("data_amount")
+
 				managers := strings.Join(managerEmails, ",")
 				admins := strings.Join(adminEmails, ",")
 				sentQuotaReq := dataQuotaRequest(userDetails.UserChain, requestedDataQuota, managers, admins)
