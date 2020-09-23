@@ -72,6 +72,7 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 
 			if err != nil {
 				log.Println("There was a problem getting user data")
+				fmt.Fprintf(res,"There was a problem in our backend")
 				return
 			}
 			// check whether he/she a manager
@@ -114,7 +115,8 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 				}
 
 				requestedDataQuota := req.FormValue("data_amount")
-				if requestedDataQuota > 5 {
+				requestAmount,_ := strconv.Atoi(requestedDataQuota)
+				if requestAmount > 5 {
 					fmt.Fprintf(res, "Maximum data quota request is 5GB")
 					return
 				}
