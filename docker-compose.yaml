@@ -3,6 +3,7 @@ version: '3'
 services:
   mysqlserver:
     image: mysql-server
+    container_name: mysqlcontainer
     build:
       context: mysql-module/
       dockerfile: Dockerfile
