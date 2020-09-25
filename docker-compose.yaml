@@ -31,8 +31,6 @@ services:
     build: 
       context: user-service/
       dockerfile: Dockerfile
-    networks: 
-      - backend
     volumes: 
       - /home/sachith/Documents/Projects/Office/files:/files
     env_file: ./api.env
@@ -44,8 +42,6 @@ services:
     build: 
       context: admin-module/
       dockerfile: Dockerfile
-    networks: 
-      - backend
     env_file: ./api.env
     networks: 
       - backend
@@ -58,8 +54,6 @@ services:
     networks: 
       - backend
     env_file: ./api.env
-    networks: 
-      - backend
   
   loadbalancer:
     image: nginx
