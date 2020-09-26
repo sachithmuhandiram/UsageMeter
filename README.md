@@ -20,7 +20,7 @@ You can find me on [![Medium][3.2]][3] , [![Twitter][1.2]][1] or on [![LinkedIn]
 
 [1.2]: http://i.imgur.com/wWzX9uB.png (Sachith Muhandiram on Twitter)
 [2.2]: https://raw.githubusercontent.com/MartinHeinz/MartinHeinz/master/linkedin-3-16.png (Sachith Muhandiram on LinkedIN)
-[3.2]: https://imgur.com/gallery/0LR1iVU (Sachith Muhandiram on Medium)
+[3.2]: https://seeklogo.com/vector-logo/325550/medium (Sachith Muhandiram on Medium)
 
 <!-- Links to your social media accounts -->
 
