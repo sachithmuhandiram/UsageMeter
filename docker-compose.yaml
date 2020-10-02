@@ -17,6 +17,7 @@ services:
 
   usagemeterbackend:
     image: usagemeterbackend
+    container_name: usagemeterbackend
     build:
       context: .
       dockerfile: Dockerfile

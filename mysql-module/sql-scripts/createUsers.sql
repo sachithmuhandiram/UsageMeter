@@ -1,3 +1,8 @@
+CREATE USER 'usagemeter'@'mysqlcontainer' IDENTIFIED BY '7890';
+GRANT ALL ON usagemeter.* TO 'usagemeter'@'mysqlcontainer';
+CREATE USER 'usagemeter'@'%' IDENTIFIED BY '7890';
+GRANT ALL PRIVILEGES ON *.* TO 'usagemeter'@'%' WITH GRANT OPTION;
+
 CREATE TABLE IF NOT EXISTS managerMinQuota (
   id int NOT NULL AUTO_INCREMENT,
   plan varchar(50) DEFAULT NULL,

@@ -2,6 +2,14 @@
 
 [JSON response](https://medium.com/@vivek_syngh/http-response-in-golang-4ca1b3688d6)
 
+## Creating user
+
+`CREATE USER 'usagemeter'@'mysqlcontainer' IDENTIFIED BY '7890';`
+`GRANT ALL ON usagemeter.* TO 'usagemeter'@'mysqlcontainer';`
+`CREATE USER 'usagemeter'@'%' IDENTIFIED BY '7890';`
+`GRANT ALL PRIVILEGES ON *.* TO 'usagemeter'@'%' WITH GRANT OPTION;`
+
+
 ## Stored Procedures
 
 [Samples](https://www.mysqltutorial.org/stored-procedures-parameters.aspx)
@@ -37,3 +45,6 @@ String to Int
 `strconv.Atoi(string)`
 
 [Load Data infile MySQL](https://stackoverflow.com/questions/59993844/error-loading-local-data-is-disabled-this-must-be-enabled-on-both-the-client)
+### Links
+
+[Github Markdown](https://towardsdatascience.com/build-a-stunning-readme-for-your-github-profile-9b80434fe5d7)
