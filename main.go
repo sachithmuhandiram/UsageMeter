@@ -228,6 +228,8 @@ func bulkUserInsert(res http.ResponseWriter, req *http.Request) {
 	_, err := db.Exec("LOAD DATA LOCAL INFILE '" + bulkDataFile + "' INTO TABLE users FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n'")
 	if err != nil {
 		log.Println(err.Error())
+		defer db.Close()
+		return
 	}
 	log.Println("User Bulk data inserted")
 	defer db.Close()

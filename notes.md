@@ -35,3 +35,5 @@ func main() {
 String to Int
 
 `strconv.Atoi(string)`
+
+[Load Data infile MySQL](https://stackoverflow.com/questions/59993844/error-loading-local-data-is-disabled-this-must-be-enabled-on-both-the-client)
