@@ -66,12 +66,14 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 
 		validIP := validUserIP(userIP)
 
+		log.Println("User IP address : ",userIP)
+
 		if validIP {
 
 			userDetails, err := getUserDetails(userIP) // returns JSON object
 
 			if err != nil {
-				log.Println("There was a problem getting user data")
+				log.Println("There was a problem getting user data",err)
 				fmt.Fprintf(res,"There was a problem in our backend")
 				return
 			}
