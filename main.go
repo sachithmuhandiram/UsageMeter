@@ -213,8 +213,8 @@ func validateUserInput(req *http.Request) (bool, string) {
 
 	if validInt.MatchString(requestedDataQuota) {
 
-		userIPaddress := req.RemoteAddr
-		remoteIP := req.Header.Get("X-Forwarded-For")
+	//	userIPaddress := req.RemoteAddr
+		userIPaddress := req.Header.Get("X-Forwarded-For")
 
 		log.Println("Remote IP address",remoteIP)
 
