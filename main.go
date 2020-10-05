@@ -59,6 +59,8 @@ func requestData(res http.ResponseWriter, req *http.Request) {
 
 	validUserInput, userIP := validateUserInput(req)
 
+	log.Println("User request : ",req)
+
 	/*
 		This could be a problem as only one user connection active per time. Neet to test and verify.
 	*/
