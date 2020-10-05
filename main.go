@@ -216,8 +216,6 @@ func validateUserInput(req *http.Request) (bool, string) {
 	//	userIPaddress := req.RemoteAddr
 		userIPaddress := req.Header.Get("X-Forwarded-For")
 
-		log.Println("Remote IP address",remoteIP)
-
 		userIPaddress, _, _ = net.SplitHostPort(userIPaddress)
 		return true, userIPaddress
 
